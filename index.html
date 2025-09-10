@@ -1,25 +1,902 @@
 <!DOCTYPE html>
-<html lang="es"><html lang="es">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>"Aprende con Douglas" está en Mantenimiento</title>
+    <title>Aprende con Douglas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
-            font-family: sans-serif;
-            text-align: center;
-            margin: 50px;
-        }
-        h1 {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f1f1;
             color: #333;
+            background-image: url('https://images.unsplash.com/photo-1549057442-5f6531557007?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
         }
-        p {
-            color: #666;
+        .header-content {
+            background-color: #1a2;
+            color: #fff;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+            box-shadow: 0 4px 116px rgba(0, 0, 0, 0.1);
+        }
+        .footer-content {
+            background-color: #1a202c;
+            color: #fff;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .module-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .module-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+        }
+        #progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        /* Modal */
+        .modal {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        /* Intro Overlay */
+        #intro-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            border-radius: 12px;
+        }
+        /* Matching Game Styles */
+        .card-game {
+            width: 120px;
+            height: 120px;
+            perspective: 1000px;
+            cursor: pointer;
+            position: relative;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .card-game.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .card-front {
+            background-color: #4f46e5;
+            color: white;
+            transform: rotateY(0deg);
+        }
+        .card-back {
+            background-color: #6366f1;
+            color: white;
+            transform: rotateY(180deg);
         }
     </style>
 </head>
 <body>
-    <h1>En Mantenimiento</h1>
-    <p>Estamos realizando labores de mantenimiento en nuestra web. Disculpe las molestias y vuelva a visitarnos pronto.</p>
+    <header class="w-full py-4 text-center header-content mb-8">
+        <h1 class="text-3xl sm:text-4xl font-bold">
+            <i class="fas fa-graduation-cap mr-3"></i>Aprende con Douglas
+        </h1>
+        <h2 class="text-2xl sm:text-3xl font-bold">Curso Completo de Inglés Básico</h2>
+        <p class="text-sm sm:text-base text-gray-400 mt-2">¡Aprende y practica a tu ritmo!</p>
+    </header>
+
+    <main id="app-container" class="container mx-auto mt-8 p-4">
+        <div id="main-menu" class="space-y-8">
+            <div id="intro-overlay" class="text-center">
+                <h2 class="text-4xl font-bold text-white">¡Te damos la bienvenida!</h2>
+                <p class="text-xl text-green-100 mt-2">¡Esperamos que disfrutes de tu experiencia de aprendizaje en esta Aula Virtual!</p>
+            </div>
+            <div id="module-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            <div class="flex justify-center mt-8 space-x-4">
+                <button id="share-button" class="bg-green-500 text-white py-2 px-4 rounded-full hover:bg-green-600 transition duration-300">
+                    <i class="fas fa-share-alt text-sm mr-2"></i> Compartir curso
+                </button>
+                <div id="admin-button-container">
+                    <button id="admin-button" class="bg-blue-500 text-white py-2 px-4 rounded-full hover:bg-blue-600 transition duration-300">
+                        <i class="fas fa-lock text-sm mr-2"></i> Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="module-view" class="hidden space-y-6">
+            <div class="text-center">
+                <button onclick="showMainMenu()" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-full hover:bg-gray-300 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i> Volver a Módulos
+                </button>
+                <h2 id="module-title" class="text-4xl font-bold mt-4"></h2>
+                <p id="module-description" class="text-lg text-gray-600 mt-2"></p>
+                <div id="module-media" class="mt-4"></div>
+            </div>
+            <div id="lesson-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+        </div>
+
+        <div id="lesson-template" class="hidden lesson-view">
+            <div class="space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button id="back-to-modules-button" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-full hover:bg-gray-300 transition duration-300 transform hover:scale-105 inline-flex items-center mb-4">
+                        <i class="fas fa-arrow-left mr-2"></i> Volver al Módulo
+                    </button>
+                    <h2 id="lesson-title" class="text-3xl font-bold text-gray-800 mb-4"></h2>
+                    <div id="lesson-media-container" class="flex flex-wrap items-center gap-4 mb-4"></div>
+                    <div id="lesson-content" class="prose max-w-none text-gray-700"></div>
+                    <div class="mt-8 text-center">
+                        <button id="show-quiz-button" class="bg-blue-500 text-white py-3 px-8 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105">
+                            Realizar Cuestionario
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="quiz-template" class="hidden quiz-view">
+            <div class="space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button id="back-to-lesson-button" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-full hover:bg-gray-300 transition duration-300 transform hover:scale-105 inline-flex items-center mb-4">
+                        <i class="fas fa-arrow-left mr-2"></i> Volver a la lección
+                    </button>
+                    <h2 id="quiz-title" class="text-3xl font-bold text-gray-800 mb-4"></h2>
+                    <div id="progress-container" class="relative pt-1 mb-4">
+                        <div class="flex mb-2 items-center justify-between">
+                            <div>
+                                <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-blue-200 text-blue-600">
+                                    Progreso
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <span id="progress-text" class="text-xs font-semibold inline-block text-blue-600">
+                                    0/0
+                                </span>
+                            </div>
+                        </div>
+                        <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
+                            <div id="progress-bar" style="width:0%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"></div>
+                        </div>
+                    </div>
+                    <div id="timer-container" class="text-center mb-4">
+                        <div id="timer" class="text-xl font-bold text-red-500 mt-2 sm:mt-0">15:00</div>
+                    </div>
+                    <div id="quiz-questions">
+                        </div>
+                    <div id="feedback-message" class="mt-4 text-center text-lg font-bold min-h-[1.5rem]"></div>
+                    <div id="quiz-results" class="text-center hidden">
+                        <h3 class="text-2xl font-bold text-gray-800">Cuestionario Finalizado</h3>
+                        <p id="score-text" class="text-xl mt-2"></p>
+                        <div class="mt-4">
+                            <button onclick="showMainMenu()" class="bg-green-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-green-600 transition duration-300 transform hover:scale-105">
+                                Volver al Menú Principal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="matching-game-template" class="hidden text-center space-y-6">
+            <button onclick="showMainMenu()" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-full hover:bg-gray-300 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> Volver a Módulos
+            </button>
+            <h2 class="text-3xl font-bold text-white drop-shadow-lg">Juego de Memoria</h2>
+            <p class="text-white drop-shadow-lg">¡Haz clic en las cartas para encontrar los pares de palabras!</p>
+            <div id="card-container" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 justify-center items-center">
+                </div>
+        </div>
+
+        <div id="blocked-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden">
+            <div class="bg-white p-8 rounded-lg shadow-lg text-center">
+                <h3 class="text-2xl font-bold text-red-500 mb-4">Módulo Bloqueado</h3>
+                <p class="text-gray-700">Este módulo está actualmente bloqueado. Por favor, completa los módulos anteriores para desbloquearlo.</p>
+                <div class="mt-6">
+                    <button onclick="hideBlockedMessage()" class="bg-red-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-red-600 transition duration-300">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden">
+            <div class="bg-white p-8 rounded-lg shadow-lg text-center w-full max-w-md">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Acceso de Administrador</h3>
+                <input type="password" id="admin-password-input" placeholder="Ingresa la contraseña" class="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+                <button id="unlock-button" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300">
+                    Desbloquear
+                </button>
+                <p id="admin-message" class="hidden"></p>
+                <div class="mt-4">
+                    <button onclick="hideAdminModal()" class="text-gray-500 hover:text-gray-700">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="w-full py-4 text-center footer-content mt-8">
+        <p class="text-gray-400">© 2025 Aprende con Douglas. Todos los derechos reservados. Caracas, Venezuela.</p>
+        <p class="mt-2"> Contacto: Prof. Douglas A. García P. 0426-186-7736 email: <a href="mailto:edutic.capital@gmail.com" class="text-blue-400 hover:underline"> edutic.capital@gmail.com</a></p>
+        <div class="flex justify-center mt-2 space-x-4 text-gray-800">
+        </div>
+    </footer>
+    
+    <script>
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCJEmxWUH2AlIrlNR8mrMmf7_Vwrc8aQnM",
+            authDomain: "aprendiendo-con-douglas.firebaseapp.com",
+            projectId: "aprendiendo-con-douglas",
+            storageBucket: "aprendiendo-con-douglas.firebasestorage.app",
+            messagingSenderId: "9000551102",
+            appId: "1:9000551102:web:87e7467e5ef4b9ce0614ef"
+        };
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const database = firebase.database();
+        
+        const modules = {
+            'modulo-1-fundamentos-comunicacion': {
+                title: 'Módulo 1: Los Fundamentos de la Comunicación',
+                description: 'Aprende a comunicarte desde cero con saludos, despedidas y vocabulario esencial.',
+                color: 'bg-indigo-600',
+                media: {
+                    image: 'https://cdn.pixabay.com/photo/2016/09/01/08/25/english-1635056_960_720.jpg', 
+                },
+                lessons: {
+                    'saludos-despedidas': {
+                        title: 'Saludos y Despedidas',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Saludos comunes</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Hello / Hi:</strong> Hola</li>
+                                <li><strong>Good morning:</strong> Buenos días</li>
+                                <li><strong>Good afternoon:</strong> Buenas tardes</li>
+                                <li><strong>Good evening:</strong> Buenas noches (saludo)</li>
+                            </ul>
+                            <h3 class="text-2xl font-semibold mt-4">Despedidas comunes</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Goodbye / Bye:</strong> Adiós</li>
+                                <li><strong>Good night:</strong> Buenas noches (despedida)</li>
+                                <li><strong>See you later:</strong> Nos vemos luego</li>
+                                <li><strong>Take care:</strong> Cuídate</li>
+                            </ul>
+                            <a href="https://drive.google.com/uc?export=download&id=1npwlJdfuw7jhpMgyVTcA144qVsBJyzen" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar PDF de Saludos y Despedidas
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+    <source src="https://archive.org/download/saludos-y-despedidas/Saludos y Despedidas.mp3" type="audio/mpeg">
+    Tu navegador no soporta el elemento de audio.
+    </audio>                                
+    <p class="text-sm mt-2 text-gray-500">Audio: Saludos y Despedidas</p>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cuál usarías para despedirte en la noche?', options: ['Good evening', 'Good night', 'Good morning'], answer: 'Good night' },
+                            { type: 'true-false', question: '¿"Hi" y "Hello" tienen el mismo significado?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa: "It\'s late, time to say _____."', answer: 'goodbye' },
+                            { type: 'multiple-choice', question: 'Si es mediodía, ¿qué saludo es el más adecuado?', options: ['Good morning', 'Good afternoon', 'Good evening'], answer: 'Good afternoon' },
+                            { type: 'true-false', question: '¿"Take care" significa "cuídate"?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa: "I am going to the store, _____."', answer: 'see you later' }
+                        ]
+                    },
+                    'pronombres-personales': {
+                        title: 'Pronombres Personales (Personal Pronouns)',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Son palabras que reemplazan a los sustantivos para referirse a una persona, animal o cosa.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Pronombres</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>I = </strong> yo - Para referirse a uno mismo.</li>
+                                <li><strong>You = </strong> tú, usted, ustedes - Para referirse a la persona o personas con las que se habla. </li>
+                                <li><strong>He = </strong> él - Para referirse a un hombre o chico. </li>
+                                <li><strong>She = </strong> ella - Para referirse a una mujer o chica. </li>
+                                <li><strong>It = </strong> eso - Para referirse a objetos, animales o situaciones, o en general para cosas en singular.</li>
+                                <li><strong>We = </strong> nosotros/as - Para referirse a uno mismo y otras personas. </li>
+                                <li><strong>They = </strong> ellos/as - Para referirse a un grupo de personas, animales u objetos. </li>
+                            </ul>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="https://drive.google.com/uc?export=download&id=1jhGo_egJ2-VJjMBrsTZWKuxGfu-riLyG" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="https://archive.org/download/pronombres_personales_curso/pronombres_personales_curso.mp3" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: Pronombres Personales</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cuál es el pronombre para "ella"?', options: ['He', 'She', 'It'], answer: 'She' },
+                            { type: 'true-false', question: '¿"You" solo se usa para singular?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "_____ are my friends." (Ellos)', answer: 'They' },
+                            { type: 'multiple-choice', question: '¿Qué pronombre usarías para referirte a un perro?', options: ['He', 'It', 'She'], answer: 'It' },
+                            { type: 'true-false', question: '¿"We" significa "tú y yo"?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "_____ is a good student." (Él)', answer: 'He' }
+                        ]
+                    },
+                }
+            },
+            'modulo-2-sustantivos-adjetivos': {
+                title: 'Módulo 2: Sustantivos y Adjetivos',
+                description: 'Aprende los conceptos más básicos sobre los sustantivos, los adjetivos y los pronombres, el punto de partida perfecto para tu viaje por la gramática inglesa.',
+                color: 'bg-red-500',
+                lessons: {
+                    'adjetivos-posesivos': {
+                        title: 'Adjetivos Posesivos (Possessive Adjectives)',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Los adjetivos posesivos indican a quién o a quiénes le pertenece algo. Se usan siempre junto a un sustantivo (noun).</p>
+                            <h3 class="text-2xl font-semibold mt-4">Regla principal</h3>
+                            <p>Se colocan <strong>antes</strong> del sustantivo que describen.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Ejemplos clave</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>My</strong> (mi/mis): <strong>My</strong> name is Ana.</li>
+                                <li><strong>Your</strong> (tu/tus): <strong>Your</strong> house is big.</li>
+                                <li><strong>His</strong> (su, de él): <strong>His</strong> car is red.</li>
+                                <li><strong>Her</strong> (su, de ella): <strong>Her</strong> bag is small.</li>
+                                <li><strong>Its</strong> (su, de eso/animal): <strong>Its</strong> tail is long.</li>
+                                <li><strong>Our</strong> (nuestro/a): <strong>Our</strong> family is nice.</li>
+                                <li><strong>Their</strong> (su, de ellos/as): <strong>Their</strong> dog is cute.</li>
+                            </ul>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="https://drive.google.com/uc?export=download&id=1jhGo_egJ2-VJjMBrsTZWKuxGfu-riLyG" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="https://archive.org/download/pronombres_personales_curso/pronombres_personales_curso.mp3" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: Pronombres Personales</p>
+                            </div>
+`,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cuál es el adjetivo posesivo para "I"?', options: ['Your', 'My', 'His'], answer: 'My' },
+                            { type: 'true-false', question: '¿Los adjetivos posesivos van después del sustantivo?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "This is _____ book." (You)', answer: 'your' },
+                            { type: 'multiple-choice', question: 'Si la dueña es una mujer, ¿qué adjetivo posesivo usarías para referirte a su bolso?', options: ['His', 'Her', 'Our'], answer: 'Her' },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "The dog is wagging _____ tail." (It)', answer: 'its' },
+                            { type: 'true-false', question: '¿"Their" se usa para un solo dueño?', answer: false },
+                            { type: 'multiple-choice', question: '¿Cuál es el adjetivo posesivo para "We"?', options: ['They', 'Our', 'Your'], answer: 'Our' },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "_____ name is Pedro." (He)', answer: 'His' },
+                            { type: 'true-false', question: '¿"My" solo se usa para singular?', answer: false },
+                            { type: 'multiple-choice', question: '¿Qué adjetivo posesivo usarías para hablar del auto de tus amigos?', options: ['Our', 'My', 'Their'], answer: 'Their' }
+                        ]
+                    },
+                    'adjetivos': {
+                        title: 'Adjetivos (Adjectives)',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Son palabras que describen sustantivos, respondiendo a las preguntas "¿cómo es?" o "¿cómo está?".</p>
+                            <h3 class="text-2xl font-semibold mt-4">Reglas y consejos</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Ubicación:</strong> Los adjetivos siempre van <strong>antes</strong> del sustantivo en inglés (ejemplo: a <strong>red</strong> apple).</li>
+                                <li><strong>Plural:</strong> No tienen forma plural. Si el sustantivo es plural, el adjetivo se mantiene igual (ejemplo: two <strong>delicious</strong> cookies).</li>
+                                <li><strong>Género:</strong> No tienen género. Se usan de la misma forma para sustantivos masculinos o femeninos (ejemplo: a <strong>good</strong> mom, a <strong>good</strong> dad).</li>
+                            </ul>
+                            <h3 class="text-2xl font-semibold mt-4">Ejemplos clave</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>A <strong>red</strong> apple (Una manzana roja)</li>
+                                <li>A <strong>happy</strong> boy (Un chico feliz)</li>
+                                <li>My cats are <strong>small</strong> (Mis gatos son pequeños)</li>
+                            </ul>
+                        `,
+                        media: {
+                            document: [
+                        { url: 'https://drive.google.com/uc?export=download&id=1jhGo_egJ2-VJjMBrsTZWKuxGfu-riLyG', name: 'Descargar lección en PDF' }
+                    ],
+                    audio: { url: 'https://archive.org/download/pronombres_personales_curso/pronombres_personales_curso.mp3', name: 'Escuchar audio'}
+                    },
+                        quiz: [
+                            { type: 'true-false', question: '¿Los adjetivos en inglés se colocan después del sustantivo?', answer: false },
+                            { type: 'multiple-choice', question: '¿Qué adjetivo describe a un sustantivo?', options: ['Run', 'Big', 'Quickly'], answer: 'Big' },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "She has a _____ house." (beautiful)', answer: 'beautiful' },
+                            { type: 'true-false', question: '¿Los adjetivos tienen género en inglés?', answer: false },
+                            { type: 'multiple-choice', question: '¿Cuál de estos es un adjetivo?', options: ['Walk', 'Car', 'Tall'], answer: 'Tall' },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "The _____ children are playing." (happy)', answer: 'happy' },
+                            { type: 'true-false', question: '¿Los adjetivos en inglés no tienen forma plural?', answer: true },
+                            { type: 'multiple-choice', question: '¿Cómo dirías "libros interesantes"?', options: ['Books interesting', 'Interesting books', 'Books are interesting'], answer: 'Interesting books' },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "The soup is _____." (hot)', answer: 'hot' },
+                            { type: 'true-false', question: '¿"Good" es un adjetivo que cambia con el género?', answer: false }
+                        ]
+                    },
+                    'pronombres-demostrativos': {
+                        title: 'Pronombres Demostrativos (Demonstrative Pronouns)',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Se utilizan para señalar personas, animales o cosas, e indican si están cerca o lejos.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Reglas principales</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Cerca:</strong> Se usa <strong>this</strong> para singular y <strong>these</strong> para plural.</li>
+                                <li><strong>Lejos:</strong> Se usa <strong>that</strong> para singular y <strong>those</strong> para plural.</li>
+                            </ul>
+                            <h3 class="text-2xl font-semibold mt-4">Ejemplos clave</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>This</strong> is my pen. (<strong>Este</strong> es mi bolígrafo.)</li>
+                                <li><strong>These</strong> are my pens. (<strong>Estos</strong> son mis bolígrafos.)</li>
+                                <li><strong>That</strong> is his shoe. (<strong>Ese</strong> es su zapato.)</li>
+                                <li><strong>Those</strong> are his shoes. (<strong>Esos</strong> son sus zapatos.)</li>
+                            </ul>
+                        `,
+                        media: {
+                            document: [
+                        { url: 'https://drive.google.com/uc?export=download&id=1jhGo_egJ2-VJjMBrsTZWKuxGfu-riLyG', name: 'Descargar lección en PDF' }
+                    ],
+                    audio: { url: 'https://archive.org/download/pronombres_personales_curso/pronombres_personales_curso.mp3', name: 'Escuchar audio'}
+                    },
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Qué pronombre usarías para señalar un libro que tienes en la mano?', options: ['That', 'These', 'This'], answer: 'This' },
+                            { type: 'true-false', question: '¿"Those" se usa para cosas que están lejos y son singulares?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "I love _____ shirt." (cerca, singular)', answer: 'this' },
+                            { type: 'multiple-choice', question: '¿Qué pronombre usarías para hablar de los autos que están lejos?', options: ['These', 'That', 'Those'], answer: 'Those' },
+                            { type: 'true-false', question: '¿"This" y "These" se usan para referirse a cosas que están cerca?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "_____ are my friends." (cerca, plural)', answer: 'These' },
+                            { type: 'multiple-choice', question: '¿Cuál es la forma plural de "That"?', options: ['This', 'Those', 'These'], answer: 'Those' },
+                            { type: 'true-false', question: '¿"That" se usa para cosas que están lejos?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "Look at _____ bird over there." (lejos, singular)', answer: 'that' },
+                            { type: 'multiple-choice', question: '¿Qué pronombre usarías para hablar de varios libros que están en la mesa de enfrente?', options: ['These', 'Those', 'This'], answer: 'Those' }
+                        ]
+                    }
+                }
+            },
+            'modulo-3-construccion-oraciones': {
+                title: 'Módulo 3: Construcción de Oraciones',
+                description: 'Crea oraciones con el verbo "to be", aprende a hacer preguntas y a usar artículos definidos e indefinidos.',
+                color: 'bg-green-600',
+                media: {
+                    image: 'https://cdn.pixabay.com/photo/2017/08/21/11/17/learn-2665992_960_720.jpg',
+                },
+                lessons: {
+                    'verbo-to-be': {
+                        title: 'El Verbo "To Be"',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>El verbo **"to be"** significa **ser** o **estar**.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Conjugación</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>I am:</strong> Yo soy / Yo estoy</li>
+                                <li><strong>You are:</strong> Tú eres / Tú estás</li>
+                                <li><strong>He/She/It is:</strong> Él/Ella/Eso es / Él/Ella/Eso está</li>
+                                <li><strong>We are:</strong> Nosotros/as somos / Nosotros/as estamos</li>
+                                <li><strong>They are:</strong> Ellos/as son / Ellos/as están</li>
+                            </ul>
+                            <h3 class="text-2xl font-semibold mt-4">Ejemplos clave</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>I am</strong> a student. (Yo soy un estudiante.)</li>
+                                <li><strong>She is</strong> happy. (Ella está feliz.)</li>
+                                <li><strong>They are</strong> at home. (Ellos están en casa.)</li>
+                            </ul>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Qué forma de "to be" usarías con "He"?', options: ['am', 'are', 'is'], answer: 'is' },
+                            { type: 'true-false', question: '¿"We are" significa "Nosotros estamos"?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "I _____ a teacher."', answer: 'am' },
+                            { type: 'multiple-choice', question: '¿Cuál es la traducción correcta de "You are busy"?', options: ['Tú eres ocupado', 'Tú estás ocupado', 'Él está ocupado'], answer: 'Tú estás ocupado' },
+                            { type: 'true-false', question: '¿El verbo "to be" significa "tener"?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "They _____ in the park."', answer: 'are' }
+                        ]
+                    },
+                    'articulos': {
+                        title: 'Artículos A / An y The',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Artículos Indefinidos: A y An</h3>
+                            <p>Se usan para hablar de algo no específico, como un sustantivo genérico. Significan "un", "una".</p>
+                            <ul class="list-disc list-inside space-y-2 mt-2">
+                                <li><strong>A:</strong> Se usa antes de palabras que empiezan con sonido de consonante. Ejemplo: a car, a book.</li>
+                                <li><strong>An:</strong> Se usa antes de palabras que empiezan con sonido de vocal. Ejemplo: an apple, an hour (la 'h' no suena).</li>
+                            </ul>
+                            <h3 class="text-2xl font-semibold mt-4">Artículo Definido: The</h3>
+                            <p>Se usa para hablar de algo específico o conocido. Significa "el", "la", "los", "las".</p>
+                            <ul class="list-disc list-inside space-y-2 mt-2">
+                                <li>Se usa tanto con sustantivos singulares como plurales. Ejemplo: the sun, the dogs.</li>
+                            </ul>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Qué artículo usarías para "orange"?', options: ['A', 'An', 'The'], answer: 'An' },
+                            { type: 'true-false', question: '¿"A" se usa para sustantivos que empiezan con vocal?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "I need to buy _____ new computer." (genérico)', answer: 'a' },
+                            { type: 'multiple-choice', question: '¿Qué artículo usarías para "university"? (sonido de "you")', options: ['An', 'A', 'The'], answer: 'A' },
+                            { type: 'true-false', question: '¿"The" se usa para sustantivos específicos?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "I saw _____ moon." (específico)', answer: 'the' }
+                        ]
+                    }
+                }
+            },
+            'modulo-4-adjetivos-adverbios': {
+                title: 'Módulo 4: Adjetivos y Adverbios',
+                description: 'Aprende a describir personas y acciones usando adjetivos y adverbios, y a comparar con comparativos y superlativos.',
+                color: 'bg-teal-500',
+                media: {
+                    image: 'https://images.unsplash.com/photo-1549057442-5f6531557007?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8fGVufDB8fHx8fA%3D%3D',
+                },
+                lessons: {
+                    'adverbios-manera': {
+                        title: 'Adverbios de Manera',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Los adverbios de manera describen cómo se realiza una acción. Muchos se forman añadiendo **-ly** al adjetivo.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Ejemplos clave</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Quick</strong> (rápido) -> <strong>quickly</strong> (rápidamente)</li>
+                                <li><strong>Slow</strong> (lento) -> <strong>slowly</strong> (lentamente)</li>
+                                <li><strong>Careful</strong> (cuidadoso) -> <strong>carefully</strong> (cuidadosamente)</li>
+                                <li><strong>Happy</strong> (feliz) -> <strong>happily</strong> (felizmente)</li>
+                            </ul>
+                            <h3 class="text-2xl font-semibold mt-4">Excepción</h3>
+                            <p>Algunos adverbios son irregulares. Por ejemplo, el adverbio de **"good"** es **"well"**.</p>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cómo se forma el adverbio de "slow"?', options: ['slowly', 'slowful', 'slowlyy'], answer: 'slowly' },
+                            { type: 'true-false', question: '¿El adverbio de "good" es "goodly"?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "He sings so _____." (beautifully)', answer: 'beautifully' },
+                            { type: 'multiple-choice', question: '¿Cuál es el adverbio de "quick"?', options: ['quicker', 'quickly', 'quickest'], answer: 'quickly' },
+                            { type: 'true-false', question: '¿Los adverbios describen acciones?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "She writes very _____." (carefully)', answer: 'carefully' }
+                        ]
+                    },
+                    'comparativos-superlativos': {
+                        title: 'Comparativos y Superlativos',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Comparativos</h3>
+                            <p>Se usan para comparar dos cosas.</p>
+                            <ul class="list-disc list-inside space-y-2 mt-2">
+                                <li><strong>Adjetivos cortos:</strong> Añade **-er**. Ejemplo: small -> smaller.</li>
+                                <li><strong>Adjetivos largos:</strong> Usa **more**. Ejemplo: beautiful -> more beautiful.</li>
+                                <li>Usa **"than"** después del adjetivo. Ejemplo: He is **taller than** me.</li>
+                            </ul>
+                            <h3 class="text-2xl font-semibold mt-4">Superlativos</h3>
+                            <p>Se usan para comparar tres o más cosas, indicando el más extremo.</p>
+                            <ul class="list-disc list-inside space-y-2 mt-2">
+                                <li><strong>Adjetivos cortos:</strong> Añade **-est**. Ejemplo: small -> smallest.</li>
+                                <li><strong>Adjetivos largos:</strong> Usa **most**. Ejemplo: beautiful -> most beautiful.</li>
+                                <li>Usa **"the"** antes del adjetivo. Ejemplo: She is **the smartest** student.</li>
+                            </ul>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Qué forma comparativa usarías para "big"?', options: ['bigger', 'more big', 'the biggest'], answer: 'bigger' },
+                            { type: 'true-false', question: '¿El superlativo de "expensive" es "expensivest"?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "This is _____ book I have ever read." (interesting, superlativo)', answer: 'the most interesting' },
+                            { type: 'multiple-choice', question: '¿Cuál es el comparativo de "good"? (irregular)', options: ['gooder', 'better', 'more good'], answer: 'better' },
+                            { type: 'true-false', question: '¿"The" se usa con los superlativos?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "He is _____ than his brother." (tall)', answer: 'taller' }
+                        ]
+                    }
+                }
+            },
+            'modulo-5-verbos-tiempos': {
+                title: 'Módulo 5: Verbos y Tiempos Verbales',
+                description: 'Domina los verbos en presente simple y continuo, y aprende a formar oraciones negativas e interrogativas.',
+                color: 'bg-purple-600',
+                media: {
+                    image: 'https://images.unsplash.com/photo-1549057442-5f6531557007?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8fGVufDB8fHx8fA%3D%3D',
+                },
+                lessons: {
+                    'presente-simple': {
+                        title: 'Presente Simple (Simple Present)',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Se usa para hablar de rutinas, hechos generales y cosas que suceden regularmente.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Regla principal</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>Para **He, She, It**, se añade una **-s** al final del verbo.</li>
+                                <li>Para **I, You, We, They**, el verbo se queda igual.</li>
+                            </ul>
+                            <h3 class="text-2xl font-semibold mt-4">Ejemplos clave</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>I **eat** breakfast every day.</li>
+                                <li>She **eats** breakfast every day.</li>
+                                <li>We **play** football.</li>
+                                <li>He **plays** football.</li>
+                            </ul>
+                            <h3 class="text-2xl font-semibold mt-4">Forma negativa e interrogativa</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>Se usa **do** o **does** (para he/she/it).</li>
+                                <li>Negativo: I **do not** eat. / She **does not** eat.</li>
+                                <li>Interrogativo: **Do** you eat? / **Does** she eat?</li>
+                            </ul>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cómo se diría "Él juega" en inglés?', options: ['He play', 'He plays', 'He playing'], answer: 'He plays' },
+                            { type: 'true-false', question: '¿Para "We" se añade una -s al verbo en presente simple?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "They _____ to school every day." (go)', answer: 'go' },
+                            { type: 'multiple-choice', question: '¿Cuál es la forma negativa de "She reads"?', options: ['She not read', 'She does not read', 'She do not read'], answer: 'She does not read' },
+                            { type: 'true-false', question: '¿Se usa "do" para hacer preguntas con "They"?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "_____ he work here?" (Do o Does)', answer: 'Does' }
+                        ]
+                    },
+                    'presente-continuo': {
+                        title: 'Presente Continuo (Present Continuous)',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Se usa para hablar de acciones que están sucediendo en el momento en que se habla.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Regla principal</h3>
+                            <p>Se forma con el verbo "to be" + el verbo principal con la terminación **-ing**.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Estructura</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Afirmativa:</strong> Sujeto + verbo "to be" + verbo (-ing). Ejemplo: I am talking.</li>
+                                <li><strong>Negativa:</strong> Sujeto + verbo "to be" + not + verbo (-ing). Ejemplo: He is not listening.</li>
+                                <li><strong>Interrogativa:</strong> Verbo "to be" + Sujeto + verbo (-ing)? Ejemplo: Are you studying?</li>
+                            </ul>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cómo se diría "Ellos están comiendo" en inglés?', options: ['They eats', 'They are eating', 'They eat'], answer: 'They are eating' },
+                            { type: 'true-false', question: '¿El presente continuo se usa para acciones futuras?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "She _____ right now." (is sleeping)', answer: 'is sleeping' },
+                            { type: 'multiple-choice', question: '¿Cuál es la forma negativa de "I am running"?', options: ['I am not running', 'I no running', 'I am running not'], answer: 'I am not running' },
+                            { type: 'true-false', question: '¿El verbo principal en presente continuo siempre termina en -ing?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "Are you _____ a book?" (reading)', answer: 'reading' }
+                        ]
+                    }
+                }
+            }
+        };
+
+        const views = document.querySelectorAll('#main-menu, #module-view, #lesson-template, #quiz-template, #matching-game-template');
+        const moduleListEl = document.getElementById('module-list');
+        const lessonListEl = document.getElementById('lesson-list');
+        const lessonContentEl = document.getElementById('lesson-content');
+        const lessonTitleEl = document.getElementById('lesson-title');
+        const quizQuestionsEl = document.getElementById('quiz-questions');
+        const quizResultsEl = document.getElementById('quiz-results');
+        const finalScoreEl = document.getElementById('score-text');
+        const quizTitleEl = document.getElementById('quiz-title');
+        const timerEl = document.getElementById('timer');
+        const progressBarEl = document.getElementById('progress-bar');
+        const progressTextEl = document.getElementById('progress-text');
+        const showQuizButton = document.getElementById('show-quiz-button');
+        const backToLessonButton = document.getElementById('back-to-lesson-button');
+        const backToModulesButton = document.getElementById('back-to-modules-button');
+
+        let currentModuleId = null;
+        let currentLessonId = null;
+        let currentQuizIndex = 0;
+        let correctAnswers = 0;
+        let timerInterval;
+        let timeLeft;
+        let currentQuizData = [];
+
+        function showView(viewId) {
+            views.forEach(view => view.classList.add('hidden'));
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        function renderModules() {
+            moduleListEl.innerHTML = Object.keys(modules).map(id => {
+                const module = modules[id];
+                return `
+                    <div id="${id}" class="module-card ${module.color} text-white p-6 rounded-lg shadow-xl relative cursor-pointer" onclick="showModule('${id}')">
+                        <h3 class="text-2xl font-bold mb-2">${module.title}</h3>
+                        <p>${module.description}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showModule(moduleId) {
+            currentModuleId = moduleId;
+            const module = modules[moduleId];
+            document.getElementById('module-title').textContent = module.title;
+            document.getElementById('module-description').textContent = module.description;
+            lessonListEl.innerHTML = Object.keys(module.lessons).map(lessonId => {
+                const lesson = module.lessons[lessonId];
+                return `
+                    <div class="card p-6 cursor-pointer hover:bg-gray-100 transition-colors duration-300" onclick="showLesson('${moduleId}', '${lessonId}')">
+                        <h4 class="text-xl font-semibold">${lesson.title}</h4>
+                    </div>
+                `;
+            }).join('');
+            showView('module-view');
+        }
+
+        function showLesson(moduleId, lessonId) {
+            currentLessonId = lessonId;
+            const lesson = modules[moduleId].lessons[lessonId];
+            lessonTitleEl.textContent = lesson.title;
+            lessonContentEl.innerHTML = lesson.content;
+            showView('lesson-template');
+        }
+
+        function showQuiz() {
+            const lesson = modules[currentModuleId].lessons[currentLessonId];
+            quizTitleEl.textContent = `Cuestionario: ${lesson.title}`;
+            currentQuizData = lesson.quiz;
+            currentQuizIndex = 0;
+            correctAnswers = 0;
+            timeLeft = 900; // 15 minutes
+            updateProgressBar();
+            startTimer();
+            loadQuizQuestion();
+            showView('quiz-template');
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endQuiz();
+                } else {
+                    timeLeft--;
+                }
+            }, 1000);
+        }
+
+        function endQuiz() {
+            clearInterval(timerInterval);
+            quizQuestionsEl.classList.add('hidden');
+            quizResultsEl.classList.remove('hidden');
+            finalScoreEl.textContent = `Puntaje: ${correctAnswers} de ${currentQuizData.length}`;
+            showView('quiz-template');
+        }
+
+        function updateProgressBar() {
+            const progress = (currentQuizIndex / currentQuizData.length) * 100;
+            progressBarEl.style.width = `${progress}%`;
+            progressTextEl.textContent = `${currentQuizIndex}/${currentQuizData.length}`;
+        }
+
+        function loadQuizQuestion() {
+            quizResultsEl.classList.add('hidden');
+            quizQuestionsEl.classList.remove('hidden');
+
+            if (currentQuizIndex >= currentQuizData.length) {
+                endQuiz();
+                return;
+            }
+
+            const questionData = currentQuizData[currentQuizIndex];
+            let questionHtml = '';
+
+            switch (questionData.type) {
+                case 'multiple-choice':
+                    questionHtml = `
+                        <div class="bg-gray-100 p-6 rounded-lg shadow-lg">
+                            <h4 class="text-xl font-semibold mb-4 text-center text-gray-800">${questionData.question}</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                ${questionData.options.map(option => `
+                                    <button class="option-button bg-white text-gray-800 py-3 px-4 rounded-lg shadow hover:bg-green-200 transition-colors" data-answer="${option}">${option}</button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'true-false':
+                    questionHtml = `
+                        <div class="bg-gray-100 p-6 rounded-lg shadow-lg">
+                            <h4 class="text-xl font-semibold mb-4 text-center text-gray-800">${questionData.question}</h4>
+                            <div class="flex justify-center gap-4">
+                                <button class="option-button bg-white text-gray-800 py-3 px-8 rounded-lg shadow hover:bg-green-200 transition-colors" data-answer="true">Verdadero</button>
+                                <button class="option-button bg-white text-gray-800 py-3 px-8 rounded-lg shadow hover:bg-red-200 transition-colors" data-answer="false">Falso</button>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'fill-in-the-blank':
+                    questionHtml = `
+                        <div class="bg-gray-100 p-6 rounded-lg shadow-lg">
+                            <h4 class="text-xl font-semibold mb-4 text-center text-gray-800">${questionData.question}</h4>
+                            <input type="text" id="fill-in-input" placeholder="Escribe tu respuesta..." class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-center">
+                            <button id="submit-answer" class="mt-4 bg-blue-500 text-white py-2 px-6 rounded-full hover:bg-blue-600 transition-colors w-full">Comprobar</button>
+                        </div>
+                    `;
+                    break;
+            }
+
+            quizQuestionsEl.innerHTML = questionHtml;
+
+            if (questionData.type === 'fill-in-the-blank') {
+                document.getElementById('submit-answer').addEventListener('click', () => {
+                    handleAnswer(document.getElementById('fill-in-input').value.toLowerCase().trim());
+                });
+            } else {
+                document.querySelectorAll('.option-button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        handleAnswer(e.target.dataset.answer);
+                    });
+                });
+            }
+        }
+
+        function handleAnswer(userAnswer) {
+            const questionData = currentQuizData[currentQuizIndex];
+            const correctAnswer = String(questionData.answer).toLowerCase().trim();
+            const feedbackMessageEl = document.getElementById('feedback-message');
+            const isCorrect = userAnswer === correctAnswer;
+
+            if (isCorrect) {
+                correctAnswers++;
+                feedbackMessageEl.textContent = '¡Correcto!';
+                feedbackMessageEl.classList.remove('text-red-500');
+                feedbackMessageEl.classList.add('text-green-700');
+            } else {
+                feedbackMessageEl.textContent = `Incorrecto. La respuesta correcta era: "${questionData.answer}"`;
+                feedbackMessageEl.classList.remove('text-green-700');
+                feedbackMessageEl.classList.add('text-red-500');
+            }
+
+            document.querySelectorAll('.option-button, #submit-answer').forEach(el => el.disabled = true);
+
+            setTimeout(() => {
+                feedbackMessageEl.textContent = '';
+                currentQuizIndex++;
+                updateProgressBar();
+                loadQuizQuestion();
+            }, 1500);
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            renderModules();
+            showQuizButton.addEventListener('click', showQuiz);
+            backToLessonButton.addEventListener('click', () => showLesson(currentModuleId, currentLessonId));
+            backToModulesButton.addEventListener('click', () => showModule(currentModuleId));
+
+            // Admin Modal Logic
+            const adminModal = document.getElementById('admin-modal');
+            const adminButton = document.getElementById('admin-button');
+            const closeAdminModal = document.querySelector('#admin-modal .text-gray-500');
+            const unlockButton = document.getElementById('unlock-button');
+            const adminPasswordInput = document.getElementById('admin-password-input');
+            const ADMIN_PASSWORD = "password123";
+            
+            adminButton.addEventListener('click', () => adminModal.classList.remove('hidden'));
+            closeAdminModal.addEventListener('click', () => adminModal.classList.add('hidden'));
+            unlockButton.addEventListener('click', () => {
+                if (adminPasswordInput.value === ADMIN_PASSWORD) {
+                    alert('Acceso concedido. Módulo 3 desbloqueado.');
+                    adminModal.classList.add('hidden');
+                    // Logic to unlock module goes here, e.g., re-render modules or change a class
+                } else {
+                    alert('Contraseña incorrecta.');
+                }
+            });
+
+            // Share Button Logic
+            const shareButton = document.getElementById('share-button');
+            shareButton.addEventListener('click', () => {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Aprende con Douglas',
+                        text: '¡Únete a mí y a Douglas en una aventura de aprendizaje!',
+                        url: window.location.href,
+                    }).catch(error => console.log('Error sharing:', error));
+                } else {
+                    alert('La función de compartir no está disponible en este navegador.');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
