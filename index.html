@@ -1,27 +1,428 @@
 <!DOCTYPE html>
-<html lang="es"><html lang="es">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aprende con Douglas en Mantenimiento</title>
-    <p>redaccion</p>
+    <title>Aprende con Douglas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
-            font-family: sans-serif;
-            text-align: center;
-            margin: 50px;
-        }
-        h1 {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f1f1;
             color: #333;
+            background-image: url('https://images.unsplash.com/photo-1549057442-5f6531557007?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+            background-size: cover;
+            background-position: center;
         }
-        p {
-            color: #666;
+        .bg-opacity-80 {
+            background-color: rgba(255, 255, 255, 0.8);
         }
     </style>
 </head>
-<body>
-    <h1>En Mantenimiento</h1>
-    <p>Estamos realizando labores de mantenimiento en nuestra web. Disculpe las molestias y vuelva a visitarnos pronto.</p>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white bg-opacity-80 p-8 md:p-12 rounded-lg shadow-xl w-full max-w-sm text-center transform transition-transform duration-500 hover:scale-105">
+        <h1 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">Aprende con Douglas</h1>
+        <p class="text-gray-600 mb-6">El primer módulo es gratis, los siguientes se activan con un pago único de 9$.</p>
+
+        <div id="auth-container">
+            <h2 class="text-2xl font-bold mb-4">Iniciar Sesión</h2>
+            <div class="mb-4">
+                <input type="email" id="email-input" placeholder="Ingresa tu correo electrónico" class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button id="send-link-button" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 transition duration-300">
+                Enviar Enlace de Acceso
+            </button>
+            <p id="auth-message" class="mt-4 text-sm text-gray-700"></p>
+        </div>
+
+        <div id="course-container" class="hidden">
+            <h2 class="text-2xl font-bold mb-4">¡Bienvenido!</h2>
+            <p class="text-gray-600 mb-6">Tu progreso se guarda automáticamente.</p>
+
+            <div id="course-menu" class="space-y-4 text-left">
+                </div>
+            
+            <div id="module-content" class="mt-6 text-left hidden">
+                <h3 class="text-xl font-bold mb-2" id="module-title"></h3>
+                <p class="text-gray-700 mb-4" id="module-text"></p>
+                <div id="quiz-container" class="hidden mt-4">
+                    <h4 class="font-semibold mb-2">Quiz:</h4>
+                    <p id="question-text" class="mb-2"></p>
+                    <div id="quiz-options" class="space-y-2"></div>
+                </div>
+                <div id="module-actions" class="mt-4">
+                    <button id="next-module-button" class="bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600 transition duration-300 hidden">
+                        Siguiente Módulo
+                    </button>
+                    <button id="finish-quiz-button" class="bg-purple-500 text-white font-bold py-2 px-4 rounded-md hover:bg-purple-600 transition duration-300 hidden">
+                        Terminar Quiz
+                    </button>
+                </div>
+                <button id="back-to-menu-button" class="mt-4 bg-gray-500 text-white font-bold py-2 px-4 rounded-md hover:bg-gray-600 transition duration-300">
+                    Volver al Menú
+                </button>
+            </div>
+            
+            <button id="sign-out-button" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-md hover:bg-red-700 transition duration-300 mt-6">
+                Cerrar Sesión
+            </button>
+        </div>
+
+        <div id="admin-login-container" class="hidden">
+            <h2 class="text-2xl font-bold mb-4">Acceso de Administrador</h2>
+            <div class="mb-4">
+                <input type="email" id="admin-email-input" placeholder="Correo del administrador" class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
+                <input type="password" id="admin-password-input" placeholder="Contraseña" class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button id="admin-login-button" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 transition duration-300">
+                Ingresar como Admin
+            </button>
+            <p id="admin-message" class="mt-4 text-sm text-red-600"></p>
+        </div>
+        
+        <div id="admin-panel" class="hidden text-left mt-6">
+            <h3 class="text-xl font-bold mb-4">Gestión de Usuarios</h3>
+            <div id="users-list" class="space-y-2">
+                </div>
+            <button id="admin-sign-out-button" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-md hover:bg-red-700 transition duration-300 mt-6">
+                Cerrar Sesión Admin
+            </button>
+        </div>
+
+        <button id="shareButton" class="w-full bg-green-500 text-white font-bold py-3 px-4 rounded-md hover:bg-green-600 transition duration-300 mt-6 hidden">
+            <i class="fas fa-share-alt mr-2"></i>Compartir curso
+        </button>
+    </div>
+
+    <script>
+        // TODO: Reemplaza con la configuración de tu proyecto de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJEmxWUH2AlIrlNR8mrMmf7_Vwrc8aQnM",
+            authDomain: "aprendiendo-con-douglas.firebaseapp.com",
+            projectId: "aprendiendo-con-douglas",
+            storageBucket: "aprendiendo-con-douglas.firebasestorage.app",
+            messagingSenderId: "9000551102",
+            appId: "1:9000551102:web:87e7467e5ef4b9ce0614ef"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // Elementos de la UI
+        const authContainer = document.getElementById('auth-container');
+        const courseContainer = document.getElementById('course-container');
+        const adminLoginContainer = document.getElementById('admin-login-container');
+        const adminPanel = document.getElementById('admin-panel');
+        const shareButton = document.getElementById('shareButton');
+        const courseMenu = document.getElementById('course-menu');
+        const moduleContentDiv = document.getElementById('module-content');
+        const moduleTitle = document.getElementById('module-title');
+        const moduleText = document.getElementById('module-text');
+        const quizContainer = document.getElementById('quiz-container');
+        const questionText = document.getElementById('question-text');
+        const quizOptions = document.getElementById('quiz-options');
+        const finishQuizButton = document.getElementById('finish-quiz-button');
+        const backToMenuButton = document.getElementById('back-to-menu-button');
+
+        // Módulos del curso
+        const modules = [
+            { id: 1, title: 'Conceptos Básicos (Gratis)', content: 'Aquí se presenta el contenido introductorio del curso. Al final, un breve quiz te ayudará a probar tu conocimiento.', quizzes: [{ question: '¿Cuál es el propósito de este curso?', options: ['Aprender a cocinar', 'Mejorar tus habilidades de liderazgo', 'Completar un juego'], answer: 'Mejorar tus habilidades de liderazgo' }] },
+            { id: 2, title: 'Comunicación Asertiva', content: 'Este módulo explora técnicas para una comunicación efectiva y asertiva en el trabajo y la vida personal.' },
+            { id: 3, title: 'Liderazgo y Gestión de Equipos', content: 'Aquí aprenderás a liderar equipos, motivar a tus colaboradores y gestionar proyectos de manera eficiente.' },
+            { id: 4, title: 'Puesta en Marcha de Proyectos', content: 'Este módulo te guía paso a paso en la ejecución de tus proyectos, desde la planificación hasta el lanzamiento.' }
+        ];
+
+        let currentModule = null;
+        let currentQuestionIndex = 0;
+
+        // ---- Lógica de Autenticación ----
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // El usuario está autenticado, determina si es admin o usuario regular
+                const adminEmail = document.getElementById('admin-email-input').value; // Usar el campo para el email de admin
+                if (user.email === adminEmail) {
+                    showAdminView();
+                } else {
+                    showCourseView(user);
+                }
+            } else {
+                showAuthView();
+            }
+        });
+
+        // Autenticación de Usuario (Enlace Mágico)
+        const sendLinkButton = document.getElementById('send-link-button');
+        sendLinkButton.addEventListener('click', () => {
+            const email = document.getElementById('email-input').value;
+            if (email) {
+                const actionCodeSettings = { url: window.location.href, handleCodeInApp: true };
+                auth.sendSignInLinkToEmail(email, actionCodeSettings)
+                    .then(() => {
+                        window.localStorage.setItem('emailForSignIn', email);
+                        document.getElementById('auth-message').textContent = `Se ha enviado un enlace de acceso a ${email}. Revisa tu bandeja de entrada.`;
+                    })
+                    .catch((error) => {
+                        document.getElementById('auth-message').textContent = `Error: ${error.message}`;
+                    });
+            }
+        });
+
+        if (auth.isSignInWithEmailLink(window.location.href)) {
+            let email = window.localStorage.getItem('emailForSignIn');
+            if (!email) {
+                email = window.prompt('Por favor, ingresa tu correo electrónico para completar el inicio de sesión.');
+            }
+            auth.signInWithEmailLink(email, window.location.href)
+                .catch((error) => {
+                    document.getElementById('auth-message').textContent = `Error: ${error.message}`;
+                });
+            window.localStorage.removeItem('emailForSignIn');
+        }
+
+        // ---- Vistas de la Aplicación ----
+        function showAuthView() {
+            authContainer.classList.remove('hidden');
+            courseContainer.classList.add('hidden');
+            adminLoginContainer.classList.add('hidden');
+            adminPanel.classList.add('hidden');
+            shareButton.classList.add('hidden');
+            // Muestra el botón de admin para que pueda iniciar sesión
+            const adminButton = document.createElement('button');
+            adminButton.textContent = 'Acceso Administrador';
+            adminButton.className = 'w-full bg-gray-500 text-white font-bold py-3 px-4 rounded-md hover:bg-gray-600 transition duration-300 mt-4';
+            adminButton.onclick = showAdminLogin;
+            if (!document.getElementById('admin-button')) {
+                 adminButton.id = 'admin-button';
+                authContainer.appendChild(adminButton);
+            }
+        }
+
+        function showAdminLogin() {
+            authContainer.classList.add('hidden');
+            adminLoginContainer.classList.remove('hidden');
+        }
+
+        function showAdminView() {
+            authContainer.classList.add('hidden');
+            courseContainer.classList.add('hidden');
+            adminLoginContainer.classList.add('hidden');
+            adminPanel.classList.remove('hidden');
+            shareButton.classList.add('hidden');
+            loadUsersForAdmin();
+        }
+
+        function showCourseView(user) {
+            authContainer.classList.add('hidden');
+            courseContainer.classList.remove('hidden');
+            adminLoginContainer.classList.add('hidden');
+            adminPanel.classList.add('hidden');
+            loadProgress(user);
+        }
+
+        // ---- Lógica de Módulos y Quizzes ----
+        function renderCourseMenu(user, userProgress) {
+            courseMenu.innerHTML = '';
+            modules.forEach(module => {
+                const isPaid = userProgress && userProgress.paid;
+                const isCompleted = userProgress && userProgress.progress && userProgress.progress[module.id] && userProgress.progress[module.id].completed;
+                const isFreeModule = module.id === 1;
+
+                const moduleDiv = document.createElement('div');
+                moduleDiv.className = `p-4 rounded-lg flex items-center justify-between shadow-md cursor-pointer transition-colors duration-300 ${isFreeModule ? 'bg-green-100' : 'bg-yellow-100'}`;
+
+                const moduleTitleSpan = document.createElement('span');
+                moduleTitleSpan.textContent = module.title;
+                moduleDiv.appendChild(moduleTitleSpan);
+
+                const statusIcon = document.createElement('i');
+                if (isCompleted) {
+                    statusIcon.className = 'fas fa-check-circle text-green-500 text-xl';
+                    moduleDiv.classList.add('bg-green-200');
+                } else if (!isFreeModule && !isPaid) {
+                    statusIcon.className = 'fas fa-lock text-gray-500 text-xl';
+                    moduleDiv.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    statusIcon.className = 'fas fa-arrow-right text-blue-500 text-xl';
+                }
+                moduleDiv.appendChild(statusIcon);
+
+                if (isFreeModule || isPaid) {
+                    moduleDiv.addEventListener('click', () => showModule(module));
+                }
+                
+                courseMenu.appendChild(moduleDiv);
+            });
+            if (isPaid) {
+                shareButton.classList.remove('hidden');
+            } else {
+                shareButton.classList.add('hidden');
+            }
+        }
+
+        function showModule(module) {
+            currentModule = module;
+            courseMenu.classList.add('hidden');
+            moduleContentDiv.classList.remove('hidden');
+            moduleTitle.textContent = module.title;
+            moduleText.textContent = module.content;
+
+            if (module.quizzes) {
+                quizContainer.classList.remove('hidden');
+                currentQuestionIndex = 0;
+                renderQuiz();
+            } else {
+                quizContainer.classList.add('hidden');
+            }
+        }
+        
+        function renderQuiz() {
+            const quiz = currentModule.quizzes[currentQuestionIndex];
+            if (!quiz) {
+                finishQuiz();
+                return;
+            }
+            questionText.textContent = quiz.question;
+            quizOptions.innerHTML = '';
+            quiz.options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.className = 'w-full text-left p-2 rounded-md bg-gray-200 hover:bg-gray-300 transition duration-300';
+                button.onclick = () => checkAnswer(option, quiz.answer);
+                quizOptions.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedOption, correctAnswer) {
+            if (selectedOption === correctAnswer) {
+                alert('¡Respuesta correcta!');
+                if (currentQuestionIndex < currentModule.quizzes.length - 1) {
+                    currentQuestionIndex++;
+                    renderQuiz();
+                } else {
+                    finishQuiz();
+                }
+            } else {
+                alert('Respuesta incorrecta. Inténtalo de nuevo.');
+            }
+        }
+
+        function finishQuiz() {
+            alert('¡Quiz completado!');
+            const user = auth.currentUser;
+            if (user) {
+                updateProgress(user.uid, currentModule.id, true);
+            }
+            moduleContentDiv.classList.add('hidden');
+            courseMenu.classList.remove('hidden');
+            loadProgress(user);
+        }
+
+        backToMenuButton.addEventListener('click', () => {
+            moduleContentDiv.classList.add('hidden');
+            courseMenu.classList.remove('hidden');
+        });
+
+        // --- Lógica del Administrador ---
+        const adminLoginButton = document.getElementById('admin-login-button');
+        adminLoginButton.addEventListener('click', () => {
+            const email = document.getElementById('admin-email-input').value;
+            const password = document.getElementById('admin-password-input').value;
+            auth.signInWithEmailAndPassword(email, password)
+                .catch((error) => {
+                    document.getElementById('admin-message').textContent = `Error de acceso: ${error.message}`;
+                });
+        });
+        
+        const adminSignOutButton = document.getElementById('admin-sign-out-button');
+        adminSignOutButton.addEventListener('click', () => {
+            auth.signOut();
+        });
+
+        function loadUsersForAdmin() {
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = '';
+            database.ref('users').once('value').then(snapshot => {
+                const users = snapshot.val();
+                if (users) {
+                    Object.keys(users).forEach(uid => {
+                        const user = users[uid];
+                        const userDiv = document.createElement('div');
+                        userDiv.className = 'p-3 border rounded-md flex items-center justify-between';
+                        
+                        const statusColor = user.paid ? 'text-green-500' : 'text-yellow-500';
+                        const statusText = user.paid ? 'Acceso activado' : 'Pendiente de pago';
+
+                        userDiv.innerHTML = `
+                            <span>${user.email || 'Sin correo'}</span>
+                            <span class="${statusColor}">${statusText}</span>
+                        `;
+                        
+                        if (!user.paid) {
+                            const activateButton = document.createElement('button');
+                            activateButton.textContent = 'Activar Acceso';
+                            activateButton.className = 'bg-blue-500 text-white font-bold py-1 px-3 rounded-md hover:bg-blue-600 transition duration-300';
+                            activateButton.onclick = () => activateAccess(uid);
+                            userDiv.appendChild(activateButton);
+                        }
+                        usersList.appendChild(userDiv);
+                    });
+                } else {
+                    usersList.innerHTML = '<p class="text-gray-500">No hay usuarios registrados.</p>';
+                }
+            });
+        }
+        
+        function activateAccess(uid) {
+            database.ref('users/' + uid).update({ paid: true }).then(() => {
+                alert('Acceso activado con éxito.');
+                loadUsersForAdmin(); // Refrescar la lista
+            }).catch(error => {
+                alert('Error al activar el acceso: ' + error.message);
+            });
+        }
+
+        // --- Funciones de Utilidad y Persistencia ---
+        function loadProgress(user) {
+            database.ref('users/' + user.uid).once('value').then(snapshot => {
+                const userData = snapshot.val() || {};
+                renderCourseMenu(user, userData);
+            });
+        }
+        
+        function updateProgress(userId, moduleId, completed) {
+            database.ref('users/' + userId + '/progress/' + moduleId).update({
+                completed: completed
+            });
+        }
+
+        shareButton.addEventListener('click', () => {
+            if (navigator.share) {
+                navigator.share({
+                    title: document.title,
+                    text: '¡Aprende con Douglas! Un curso increíble para mejorar tus habilidades. El primer módulo es gratis.',
+                    url: window.location.href,
+                }).catch(console.error);
+            } else {
+                const tempInput = document.createElement('input');
+                document.body.appendChild(tempInput);
+                tempInput.value = window.location.href;
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                alert('Enlace copiado al portapapeles. ¡Compártelo con tus amigos!');
+            }
+        });
+
+    </script>
 </body>
 </html>
-
