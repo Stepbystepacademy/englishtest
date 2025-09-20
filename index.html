@@ -33,14 +33,23 @@
         <p class="text-gray-600 mb-6">El primer módulo es gratis, los siguientes se activan con un pago único de 9$.</p>
 
         <div id="auth-container">
-            <h2 class="text-2xl font-bold mb-4">Iniciar Sesión</h2>
+            <h2 class="text-2xl font-bold mb-4">Ingresar / Registrarse</h2>
             <div class="mb-4">
-                <input type="email" id="email-input" placeholder="Ingresa tu correo electrónico" class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="email" id="email-input" placeholder="Correo electrónico" class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
+                <input type="password" id="password-input" placeholder="Contraseña" class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
-            <button id="send-link-button" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 transition duration-300">
-                Enviar Enlace de Acceso
-            </button>
+            <div class="space-y-2">
+                <button id="signup-button" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-md hover:bg-green-700 transition duration-300">
+                    Registrarse
+                </button>
+                <button id="login-button" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 transition duration-300">
+                    Iniciar Sesión
+                </button>
+            </div>
             <p id="auth-message" class="mt-4 text-sm text-gray-700"></p>
+            <button id="admin-button" class="w-full bg-gray-500 text-white font-bold py-3 px-4 rounded-md hover:bg-gray-600 transition duration-300 mt-4">
+                Acceso Administrador
+            </button>
         </div>
 
         <div id="course-container" class="hidden">
@@ -83,8 +92,8 @@
                 <input type="password" id="admin-password-input" placeholder="Contraseña" class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <button id="admin-login-button" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 transition duration-300">
-                Ingresar como Admin
-            </button>
+                    Ingresar como Admin
+                </button>
             <p id="admin-message" class="mt-4 text-sm text-red-600"></p>
         </div>
         
@@ -105,14 +114,13 @@
     <script>
         // TODO: Reemplaza con la configuración de tu proyecto de Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyCJEmxWUH2AlIrlNR8mrMmf7_Vwrc8aQnM",
-            authDomain: "aprendiendo-con-douglas.firebaseapp.com",
-            projectId: "aprendiendo-con-douglas",
-            storageBucket: "aprendiendo-con-douglas.firebasestorage.app",
-            messagingSenderId: "9000551102",
-            appId: "1:9000551102:web:87e7467e5ef4b9ce0614ef"
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_PROJECT_ID.firebaseapp.com",
+            projectId: "TU_PROJECT_ID",
+            storageBucket: "TU_PROJECT_ID.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
         };
-
         firebase.initializeApp(firebaseConfig);
         
         const auth = firebase.auth();
@@ -133,6 +141,18 @@
         const quizOptions = document.getElementById('quiz-options');
         const finishQuizButton = document.getElementById('finish-quiz-button');
         const backToMenuButton = document.getElementById('back-to-menu-button');
+        const emailInput = document.getElementById('email-input');
+        const passwordInput = document.getElementById('password-input');
+        const signupButton = document.getElementById('signup-button');
+        const loginButton = document.getElementById('login-button');
+        const authMessage = document.getElementById('auth-message');
+        const adminButton = document.getElementById('admin-button');
+        const adminEmailInput = document.getElementById('admin-email-input');
+        const adminPasswordInput = document.getElementById('admin-password-input');
+        const adminLoginButton = document.getElementById('admin-login-button');
+        const adminSignOutButton = document.getElementById('admin-sign-out-button');
+        const adminMessage = document.getElementById('admin-message');
+        const signOutButton = document.getElementById('sign-out-button');
 
         // Módulos del curso
         const modules = [
@@ -148,46 +168,47 @@
         // ---- Lógica de Autenticación ----
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // El usuario está autenticado, determina si es admin o usuario regular
-                const adminEmail = document.getElementById('admin-email-input').value; // Usar el campo para el email de admin
-                if (user.email === adminEmail) {
-                    showAdminView();
-                } else {
-                    showCourseView(user);
-                }
+                database.ref('users/' + user.uid).once('value').then(snapshot => {
+                    const userData = snapshot.val();
+                    if (userData && userData.isAdmin) {
+                        showAdminView();
+                    } else {
+                        showCourseView(user);
+                    }
+                });
             } else {
                 showAuthView();
             }
         });
 
-        // Autenticación de Usuario (Enlace Mágico)
-        const sendLinkButton = document.getElementById('send-link-button');
-        sendLinkButton.addEventListener('click', () => {
-            const email = document.getElementById('email-input').value;
-            if (email) {
-                const actionCodeSettings = { url: window.location.href, handleCodeInApp: true };
-                auth.sendSignInLinkToEmail(email, actionCodeSettings)
-                    .then(() => {
-                        window.localStorage.setItem('emailForSignIn', email);
-                        document.getElementById('auth-message').textContent = `Se ha enviado un enlace de acceso a ${email}. Revisa tu bandeja de entrada.`;
-                    })
-                    .catch((error) => {
-                        document.getElementById('auth-message').textContent = `Error: ${error.message}`;
-                    });
-            }
+        signupButton.addEventListener('click', () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(result => {
+                    authMessage.textContent = "¡Registro exitoso! Ahora puedes iniciar sesión.";
+                    database.ref('users/' + result.user.uid).set({ email: email, paid: false });
+                })
+                .catch(error => {
+                    authMessage.textContent = `Error de registro: ${error.message}`;
+                });
         });
 
-        if (auth.isSignInWithEmailLink(window.location.href)) {
-            let email = window.localStorage.getItem('emailForSignIn');
-            if (!email) {
-                email = window.prompt('Por favor, ingresa tu correo electrónico para completar el inicio de sesión.');
-            }
-            auth.signInWithEmailLink(email, window.location.href)
-                .catch((error) => {
-                    document.getElementById('auth-message').textContent = `Error: ${error.message}`;
+        loginButton.addEventListener('click', () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            auth.signInWithEmailAndPassword(email, password)
+                .then(result => {
+                    authMessage.textContent = ""; // Limpia el mensaje de error
+                })
+                .catch(error => {
+                    authMessage.textContent = `Error de acceso: ${error.message}`;
                 });
-            window.localStorage.removeItem('emailForSignIn');
-        }
+        });
+
+        signOutButton.addEventListener('click', () => {
+            auth.signOut();
+        });
 
         // ---- Vistas de la Aplicación ----
         function showAuthView() {
@@ -196,15 +217,6 @@
             adminLoginContainer.classList.add('hidden');
             adminPanel.classList.add('hidden');
             shareButton.classList.add('hidden');
-            // Muestra el botón de admin para que pueda iniciar sesión
-            const adminButton = document.createElement('button');
-            adminButton.textContent = 'Acceso Administrador';
-            adminButton.className = 'w-full bg-gray-500 text-white font-bold py-3 px-4 rounded-md hover:bg-gray-600 transition duration-300 mt-4';
-            adminButton.onclick = showAdminLogin;
-            if (!document.getElementById('admin-button')) {
-                 adminButton.id = 'admin-button';
-                authContainer.appendChild(adminButton);
-            }
         }
 
         function showAdminLogin() {
@@ -333,17 +345,19 @@
         });
 
         // --- Lógica del Administrador ---
-        const adminLoginButton = document.getElementById('admin-login-button');
+        adminButton.addEventListener('click', showAdminLogin);
         adminLoginButton.addEventListener('click', () => {
-            const email = document.getElementById('admin-email-input').value;
-            const password = document.getElementById('admin-password-input').value;
+            const email = adminEmailInput.value;
+            const password = adminPasswordInput.value;
             auth.signInWithEmailAndPassword(email, password)
-                .catch((error) => {
-                    document.getElementById('admin-message').textContent = `Error de acceso: ${error.message}`;
+                .then(result => {
+                    database.ref('users/' + result.user.uid).update({ isAdmin: true });
+                })
+                .catch(error => {
+                    adminMessage.textContent = `Error de acceso: ${error.message}`;
                 });
         });
         
-        const adminSignOutButton = document.getElementById('admin-sign-out-button');
         adminSignOutButton.addEventListener('click', () => {
             auth.signOut();
         });
@@ -385,7 +399,7 @@
         function activateAccess(uid) {
             database.ref('users/' + uid).update({ paid: true }).then(() => {
                 alert('Acceso activado con éxito.');
-                loadUsersForAdmin(); // Refrescar la lista
+                loadUsersForAdmin();
             }).catch(error => {
                 alert('Error al activar el acceso: ' + error.message);
             });
@@ -422,7 +436,6 @@
                 alert('Enlace copiado al portapapeles. ¡Compártelo con tus amigos!');
             }
         });
-
     </script>
 </body>
 </html>
