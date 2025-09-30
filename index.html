@@ -6,9 +6,7 @@
     <title>Aprende con Douglas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 
     <style>
@@ -19,101 +17,281 @@
             color: #333;
             background-image: url('https://images.unsplash.com/photo-1549057442-5f6531557007?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
             background-size: cover;
+            background-attachment: fixed;
             background-position: center;
         }
-        .bg-opacity-80 {
-            background-color: rgba(255, 255, 255, 0.8);
+        .header-content {
+            background-color: #1a202c;
+            color: #fff;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+            box-shadow: 0 4px 116px rgba(0, 0, 0, 0.1);
+        }
+        .footer-content {
+            background-color: #1a202c;
+            color: #fff;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .module-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .module-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        #progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+
+        /* Modal */
+        .modal {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        
+        /* Intro Overlay */
+        #intro-overlay {
+            background-color: #b9f6ca;
+            padding: 2rem;
+            border-radius: 12px;
+        }
+        
+        /* Matching Game Styles */
+        .card-game {
+            width: 100%;
+            padding-bottom: 100%; /* Para que sea un cuadrado perfecto */
+            position: relative;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: rotateY(0deg); /* La cara trasera es visible por defecto */
+        }
+        
+        .card-game.flipped .card-inner {
+            transform: rotateY(180deg); /* La cara delantera se muestra al voltear */
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .card-front {
+            background-color: #4f46e5;
+            color: white;
+            transform: rotateY(180deg); /* La cara delantera está girada por defecto */
+        }
+
+        .card-back {
+            background-color: #6366f1;
+            color: white;
+            transform: rotateY(0deg);
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <header class="w-full py-4 text-center header-content mb-8">
+        <h1 class="text-3xl sm:text-4xl font-bold">
+            <i class="fas fa-graduation-cap mr-3"></i>Aprende con Douglas
+        </h1>
+        <h3 class="text-1xl sm:text-3xl font-bold"> Curso Completo de Inglés Básico</h3>
 
-    <div class="bg-white bg-opacity-80 p-8 md:p-12 rounded-lg shadow-xl w-full max-w-sm text-center transform transition-transform duration-500 hover:scale-105">
-        <h1 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">Aprende con Douglas</h1>
-        <p class="text-gray-600 mb-6">El primer módulo es gratis, los siguientes se activan con un pago único de 9$.</p>
+        <p class="text-xl text-back-400 mt-2"><strong>¡Aprende y practica a tu ritmo!</strong></p>
+    </header>
 
-        <div id="auth-container">
-            <h2 class="text-2xl font-bold mb-4">Ingresar / Registrarse</h2>
-            <div class="mb-4">
-                <input type="email" id="email-input" placeholder="Correo electrónico" class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
-                <input type="password" id="password-input" placeholder="Contraseña" class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <main id="app-container" class="container mx-auto mt-8 p-4 flex-grow max-w-7xl">
+
+        <div id="main-menu" class="space-y-8">
+            <div id="intro-overlay" class="text-center">
+                <h2 class="text-4xl font-bold text-blue">¡Te damos la bienvenida!</h2>
+                <p class="text-xl text-blue-600 mt-2"><strong>¡Esperamos que disfrutes de tu experiencia de aprendizaje en esta Aula Virtual!</strong></p>
             </div>
-            <div class="space-y-2">
-                <button id="signup-button" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-md hover:bg-green-700 transition duration-300">
-                    Registrarse
-                </button>
-                <button id="login-button" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 transition duration-300">
-                    Iniciar Sesión
-                </button>
-            </div>
-            <p id="auth-message" class="mt-4 text-sm text-gray-700"></p>
-            <button id="admin-button" class="w-full bg-gray-500 text-white font-bold py-3 px-4 rounded-md hover:bg-gray-600 transition duration-300 mt-4">
-                Acceso Administrador
-            </button>
-        </div>
-
-        <div id="course-container" class="hidden">
-            <h2 class="text-2xl font-bold mb-4">¡Bienvenido!</h2>
-            <p class="text-gray-600 mb-6">Tu progreso se guarda automáticamente.</p>
-
-            <div id="course-menu" class="space-y-4 text-left">
+            <div id="module-list" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
                 </div>
             
-            <div id="module-content" class="mt-6 text-left hidden">
-                <h3 class="text-xl font-bold mb-2" id="module-title"></h3>
-                <p class="text-gray-700 mb-4" id="module-text"></p>
-                <div id="quiz-container" class="hidden mt-4">
-                    <h4 class="font-semibold mb-2">Quiz:</h4>
-                    <p id="question-text" class="mb-2"></p>
-                    <div id="quiz-options" class="space-y-2"></div>
-                </div>
-                <div id="module-actions" class="mt-4">
-                    <button id="next-module-button" class="bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600 transition duration-300 hidden">
-                        Siguiente Módulo
-                    </button>
-                    <button id="finish-quiz-button" class="bg-purple-500 text-white font-bold py-2 px-4 rounded-md hover:bg-purple-600 transition duration-300 hidden">
-                        Terminar Quiz
+            <div class="flex justify-center mt-8 space-x-4">
+                <button id="share-button" class="bg-green-500 text-white py-2 px-4 rounded-full hover:bg-green-600 transition duration-300">
+                    <i class="fas fa-share-alt text-sm mr-2"></i> Compartir curso
+                </button>
+                <div id="admin-button-container">
+                    <button id="admin-button" class="bg-blue-500 text-white py-2 px-4 rounded-full hover:bg-blue-600 transition duration-300">
+                        <i class="fas fa-lock text-sm mr-2"></i> Admin
                     </button>
                 </div>
-                <button id="back-to-menu-button" class="mt-4 bg-gray-500 text-white font-bold py-2 px-4 rounded-md hover:bg-gray-600 transition duration-300">
-                    Volver al Menú
-                </button>
             </div>
-            
-            <button id="sign-out-button" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-md hover:bg-red-700 transition duration-300 mt-6">
-                Cerrar Sesión
-            </button>
         </div>
 
-        <div id="admin-login-container" class="hidden">
-            <h2 class="text-2xl font-bold mb-4">Acceso de Administrador</h2>
-            <div class="mb-4">
-                <input type="email" id="admin-email-input" placeholder="Correo del administrador" class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
-                <input type="password" id="admin-password-input" placeholder="Contraseña" class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <button id="admin-login-button" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 transition duration-300">
-                    Ingresar como Admin
+        <div id="module-view" class="hidden space-y-6">
+            <div class="text-center">
+                <button onclick="showMainMenu()" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-full hover:bg-gray-300 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i> Volver a Módulos
                 </button>
-            <p id="admin-message" class="mt-4 text-sm text-red-600"></p>
-        </div>
-        
-        <div id="admin-panel" class="hidden text-left mt-6">
-            <h3 class="text-xl font-bold mb-4">Gestión de Usuarios</h3>
-            <div id="users-list" class="space-y-2">
+                <h2 id="module-title" class="text-4xl font-bold mt-4"></h2>
+                <p id="module-description" class="text-lg text-gray-600 mt-2"></p>
+                <div id="module-media" class="mt-4"></div>
+            </div>
+            <div id="lesson-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 </div>
-            <button id="admin-sign-out-button" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-md hover:bg-red-700 transition duration-300 mt-6">
-                Cerrar Sesión Admin
-            </button>
         </div>
 
-        <button id="shareButton" class="w-full bg-green-500 text-white font-bold py-3 px-4 rounded-md hover:bg-green-600 transition duration-300 mt-6 hidden">
-            <i class="fas fa-share-alt mr-2"></i>Compartir curso
-        </button>
-    </div>
+        <div id="lesson-template" class="hidden lesson-view">
+            <div class="space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button id="back-to-modules-button" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-full hover:bg-gray-300 transition duration-300 transform hover:scale-105 inline-flex items-center mb-4">
+                        <i class="fas fa-arrow-left mr-2"></i> Volver al Módulo
+                    </button>
+                    <h2 id="lesson-title" class="text-3xl font-bold text-gray-800 mb-4"></h2>
+                    <div id="lesson-media-container" class="flex flex-wrap items-center gap-4 mb-4"></div>
+                    <div id="lesson-content" class="prose max-w-none text-gray-700"></div>
+                    <div class="mt-8 text-center">
+                        <button id="show-quiz-button" class="bg-blue-500 text-white py-3 px-8 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105">
+                            Realizar Cuestionario
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <div id="quiz-template" class="hidden quiz-view">
+            <div class="space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button id="back-to-lesson-button" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-full hover:bg-gray-300 transition duration-300 transform hover:scale-105 inline-flex items-center mb-4">
+                        <i class="fas fa-arrow-left mr-2"></i> Volver a la lección
+                    </button>
+                    <h2 id="quiz-title" class="text-3xl font-bold text-gray-800 mb-4"></h2>
+                    <div id="progress-container" class="relative pt-1 mb-4">
+                        <div class="flex mb-2 items-center justify-between">
+                            <div>
+                                <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-blue-200 text-blue-600">
+                                    Progreso
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <span id="progress-text" class="text-xs font-semibold inline-block text-blue-600">
+                                    0/0
+                                </span>
+                            </div>
+                        </div>
+                        <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
+                            <div id="progress-bar" style="width:0%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"></div>
+                        </div>
+                    </div>
+                    <div id="timer-container" class="text-center mb-4">
+                        <div id="timer" class="text-xl font-bold text-red-500 mt-2 sm:mt-0">15:00</div>
+                    </div>
+                    <div id="quiz-questions">
+                        </div>
+                    <div id="feedback-message" class="mt-4 text-center text-lg font-bold min-h-[1.5rem]"></div>
+                    <div id="quiz-results" class="text-center hidden">
+                        <h3 class="text-2xl font-bold text-gray-800">Cuestionario Finalizado</h3>
+                        <p id="score-text" class="text-xl mt-2"></p>
+                        <div class="mt-4">
+                            <button onclick="showMainMenu()" class="bg-green-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-green-600 transition duration-300 transform hover:scale-105">
+                                Volver al Menú Principal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="matching-game-template" class="hidden text-center space-y-6">
+            <button onclick="showMainMenu()" class="bg-gray-200 text-gray-900 py-2 px-4 rounded-full hover:bg-gray-300 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> Volver a Módulos
+            </button>
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h2 class="text-3xl font-bold text-gray-900">Juego de Memoria</h2>
+                <p class="text-gray-700">¡Haz clic en las cartas para encontrar los pares de palabras!</p>
+            </div>
+            <div id="card-container" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 justify-center items-center">
+            </div>
+        </div>
+
+        <div id="performance-analysis-template" class="hidden text-center space-y-6">
+            <button onclick="showMainMenu()" class="bg-gray-200 text-gray-900 py-2 px-4 rounded-full hover:bg-gray-300 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> Volver a Módulos
+            </button>
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h2 class="text-3xl font-bold text-gray-900">Análisis del Rendimiento</h2>
+                <p class="text-gray-700">Aquí se muestra tu progreso y las estadísticas de tus cuestionarios.</p>
+                <div id="performance-details" class="mt-4">
+                    </div>
+                <button onclick="resetQuizzes()" class="mt-4 bg-red-500 text-white py-2 px-4 rounded-full hover:bg-red-600 transition duration-300">
+                    <i class="fas fa-redo mr-2"></i> Reiniciar Cuestionarios
+                </button>
+            </div>
+        </div>
+
+        <div id="blocked-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden">
+            <div class="bg-white p-8 rounded-lg shadow-lg text-center">
+                <h3 class="text-2xl font-bold text-red-500 mb-4">Módulos Bloqueados</h3>
+                <p class="text-gray-700">Para desbloquear todos los módulos realiza pago móvil a 10182240 0102 04261867736 9$ (BCV) luego de verificar pago, se envía la contraseña para desbloquearlos.</p>
+                <div class="mt-6">
+                    <button onclick="hideBlockedMessage()" class="bg-red-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-red-600 transition duration-300">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden">
+            <div class="bg-white p-8 rounded-lg shadow-lg text-center w-full max-w-md">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Acceso de Administrador</h3>
+                <div class="relative mb-4">
+                    <input type="password" id="admin-password-input" placeholder="Ingresa la contraseña" class="w-full py-2 px-4 border rounded-full pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button type="button" id="toggle-password-visibility" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition duration-300 focus:outline-none">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <button id="unlock-button" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300">
+                    Desbloquear
+                </button>
+                <p id="admin-message" class="hidden"></p>
+                <div class="mt-4">
+                    <button onclick="hideAdminModal()" class="text-gray-500 hover:text-gray-700">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="w-full py-4 text-center footer-content mt-8">
+        <p class="text-gray-400">© 2025 Aprende con Douglas. Todos los derechos reservados. Caracas, Venezuela.</p>
+        <p class="mt-2"> Contacto: Prof. Douglas A. García P. 0426-186-7736 email: <a href="mailto:edutic.capital@gmail.com" class="text-blue-400 hover:underline"> edutic.capital@gmail.com</a></p>
+        <div class="flex justify-center mt-2 space-x-4 text-gray-800">
+    </footer>
+    
     <script>
-        // TODO: Reemplaza con la configuración de tu proyecto de Firebase
-        const firebaseConfig = {
+        const FIREBASE_CONFIG = {
             apiKey: "AIzaSyCJEmxWUH2AlIrlNR8mrMmf7_Vwrc8aQnM",
             authDomain: "aprendiendo-con-douglas.firebaseapp.com",
             projectId: "aprendiendo-con-douglas",
@@ -121,321 +299,1287 @@
             messagingSenderId: "9000551102",
             appId: "1:9000551102:web:87e7467e5ef4b9ce0614ef"
         };
-        firebase.initializeApp(firebaseConfig);
-        
-        const auth = firebase.auth();
+        firebase.initializeApp(FIREBASE_CONFIG);
         const database = firebase.database();
-
-        // Elementos de la UI
-        const authContainer = document.getElementById('auth-container');
-        const courseContainer = document.getElementById('course-container');
-        const adminLoginContainer = document.getElementById('admin-login-container');
-        const adminPanel = document.getElementById('admin-panel');
-        const shareButton = document.getElementById('shareButton');
-        const courseMenu = document.getElementById('course-menu');
-        const moduleContentDiv = document.getElementById('module-content');
-        const moduleTitle = document.getElementById('module-title');
-        const moduleText = document.getElementById('module-text');
-        const quizContainer = document.getElementById('quiz-container');
-        const questionText = document.getElementById('question-text');
-        const quizOptions = document.getElementById('quiz-options');
-        const finishQuizButton = document.getElementById('finish-quiz-button');
-        const backToMenuButton = document.getElementById('back-to-menu-button');
-        const emailInput = document.getElementById('email-input');
-        const passwordInput = document.getElementById('password-input');
-        const signupButton = document.getElementById('signup-button');
-        const loginButton = document.getElementById('login-button');
-        const authMessage = document.getElementById('auth-message');
-        const adminButton = document.getElementById('admin-button');
-        const adminEmailInput = document.getElementById('admin-email-input');
-        const adminPasswordInput = document.getElementById('admin-password-input');
-        const adminLoginButton = document.getElementById('admin-login-button');
-        const adminSignOutButton = document.getElementById('admin-sign-out-button');
-        const adminMessage = document.getElementById('admin-message');
-        const signOutButton = document.getElementById('sign-out-button');
-
-        // Módulos del curso
-        const modules = [
-            { id: 1, title: 'Conceptos Básicos (Gratis)', content: 'Aquí se presenta el contenido introductorio del curso. Al final, un breve quiz te ayudará a probar tu conocimiento.', quizzes: [{ question: '¿Cuál es el propósito de este curso?', options: ['Aprender a cocinar', 'Mejorar tus habilidades de liderazgo', 'Completar un juego'], answer: 'Mejorar tus habilidades de liderazgo' }] },
-            { id: 2, title: 'Comunicación Asertiva', content: 'Este módulo explora técnicas para una comunicación efectiva y asertiva en el trabajo y la vida personal.' },
-            { id: 3, title: 'Liderazgo y Gestión de Equipos', content: 'Aquí aprenderás a liderar equipos, motivar a tus colaboradores y gestionar proyectos de manera eficiente.' },
-            { id: 4, title: 'Puesta en Marcha de Proyectos', content: 'Este módulo te guía paso a paso en la ejecución de tus proyectos, desde la planificación hasta el lanzamiento.' }
-        ];
-
-        let currentModule = null;
-        let currentQuestionIndex = 0;
-
-        // ---- Lógica de Autenticación ----
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                database.ref('users/' + user.uid).once('value').then(snapshot => {
-                    const userData = snapshot.val();
-                    if (userData && userData.isAdmin) {
-                        showAdminView();
-                    } else {
-                        showCourseView(user);
+        
+        const modules = {
+            'modulo-1-el-poder-del-ingles': {
+                title: 'Módulo 1: El Poder del Inglés',
+                description: 'Descubre por qué dominar el inglés es una puerta a infinitas oportunidades en tu vida personal y profesional.',
+                color: 'bg-orange-500',
+                lessons: {
+                    'el-ingles-en-el-mundo-de-hoy': {
+                        title: 'El Inglés en el Mundo de Hoy',
+                        content: `
+                            <h3 class="text-2xl font-semibold">El Idioma de la Conexión Global</h3>
+                            <p>El inglés es más que un idioma; es una herramienta de conexión. Más de 1.500 millones de personas en todo el mundo lo hablan, y es el idioma oficial en más de 50 países. Si quieres comunicarte con personas de diferentes culturas, ¡el inglés es el puente que necesitas!</p>
+                            <h4 class="text-xl font-semibold mt-4">Negocios y Tecnología</h4>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>Es el idioma principal en el comercio internacional y las finanzas.</li>
+                                <li>La mayoría de la documentación, tutoriales y foros de programación están en inglés.</li>
+                                <li>Te permite trabajar para empresas globales y colaborar con equipos en otros países.</li>
+                            </ul>
+                            <h4 class="text-xl font-semibold mt-4">Viajes y Turismo</h4>
+                            <p>Viajar se vuelve mucho más fácil. El inglés es el idioma estándar en aeropuertos, hoteles y destinos turísticos alrededor del mundo. No más barreras, solo nuevas aventuras.</p>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="URL_DE_TU_ARCHIVO_DE_DESCARGA_1" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="URL_DE_TU_ARCHIVO_DE_AUDIO_1" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: El Inglés en el Mundo de Hoy</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Por qué es el inglés una herramienta de conexión global?', options: ['Es el idioma más difícil de aprender', 'Es el idioma de la mayoría de los foros de tecnología', 'Lo hablan más de 1.500 millones de personas'], answer: 'Lo hablan más de 1.500 millones de personas' },
+                            { type: 'true-false', question: '¿El inglés solo se usa en negocios y no en turismo?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'El inglés es el idioma principal en el comercio internacional y las _____.', answer: 'finanzas' }
+                        ]
+                    },
+                    'grandes-oportunidades': {
+                        title: '¡Grandes Oportunidades!',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Impulsa Tu Carrera y Educación</h3>
+                            <p>Saber inglés te diferencia del resto. No solo te hace más valioso para los empleadores, sino que también te abre puertas a oportunidades que de otra manera no existirían.</p>
+                            <h4 class="text-xl font-semibold mt-4">Beneficios profesionales</h4>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>Acceso a trabajos mejor pagados en empresas multinacionales.</li>
+                                <li>Habilidad para comunicarte con colegas de todo el mundo.</li>
+                                <li>Más opciones para ascender de puesto y crecer en tu carrera.</li>
+                            </ul>
+                            <h4 class="text-xl font-semibold mt-4">Educación y Conocimiento</h4>
+                            <p>Gran parte del conocimiento académico y científico se publica en inglés. Dominar el idioma te permite acceder a libros, artículos y conferencias de prestigiosas universidades, manteniéndote siempre a la vanguardia.</p>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="URL_DE_TU_ARCHIVO_DE_DESCARGA_2" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="URL_DE_TU_ARCHIVO_DE_AUDIO_2" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: ¡Grandes Oportunidades!</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Qué beneficio profesional te da el inglés?', options: ['Te hace más valioso para los empleadores', 'Te permite viajar gratis', 'Te ayuda a cocinar'], answer: 'Te hace más valioso para los empleadores' },
+                            { type: 'true-false', question: '¿El inglés solo es útil para los que trabajan en tecnología?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Gran parte del conocimiento académico y científico se publica en _____.', answer: 'inglés' }
+                        ]
+                    },
+                    'el-ingles-y-la-cultura-pop': {
+                        title: 'El Inglés y la Cultura Pop',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Disfruta de tu Entretenimiento Favorito sin Límites</h3>
+                            <p>¿Te gusta ver películas o series? ¿O prefieres escuchar música? La mayoría del contenido de entretenimiento global se produce en inglés. Al aprender el idioma, puedes disfrutar de tus películas, series y canciones favoritas sin la necesidad de subtítulos o doblajes, entendiendo cada chiste y cada letra como su creador lo pensó.</p>
+                            <h4 class="text-xl font-semibold mt-4">Libros y Medios Digitales</h4>
+                            <p>El inglés te da acceso a una cantidad inmensa de contenido online: blogs, podcasts, noticias y miles de libros que aún no han sido traducidos a otros idiomas. ¡El conocimiento es ilimitado si dominas el inglés!</p>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="URL_DE_TU_ARCHIVO_DE_DESCARGA_3" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="URL_DE_TU_ARCHIVO_DE_AUDIO_3" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: El Inglés y la Cultura Pop</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cuál es un beneficio de saber inglés en el cine?', options: ['Puedes ver películas en su idioma original', 'No necesitas ir al cine', 'Te ayuda a escribir guiones'], answer: 'Puedes ver películas en su idioma original' },
+                            { type: 'true-false', question: '¿El inglés te da acceso a más libros y podcasts?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'El inglés es el idioma de la mayoría del contenido de _____ global.', answer: 'entretenimiento' }
+                        ]
                     }
-                });
-            } else {
-                showAuthView();
-            }
-        });
-
-        signupButton.addEventListener('click', () => {
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(result => {
-                    authMessage.textContent = "¡Registro exitoso! Ahora puedes iniciar sesión.";
-                    database.ref('users/' + result.user.uid).set({ email: email, paid: false });
-                })
-                .catch(error => {
-                    authMessage.textContent = `Error de registro: ${error.message}`;
-                });
-        });
-
-        loginButton.addEventListener('click', () => {
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            auth.signInWithEmailAndPassword(email, password)
-                .then(result => {
-                    authMessage.textContent = ""; // Limpia el mensaje de error
-                })
-                .catch(error => {
-                    authMessage.textContent = `Error de acceso: ${error.message}`;
-                });
-        });
-
-        signOutButton.addEventListener('click', () => {
-            auth.signOut();
-        });
-
-        // ---- Vistas de la Aplicación ----
-        function showAuthView() {
-            authContainer.classList.remove('hidden');
-            courseContainer.classList.add('hidden');
-            adminLoginContainer.classList.add('hidden');
-            adminPanel.classList.add('hidden');
-            shareButton.classList.add('hidden');
-        }
-
-        function showAdminLogin() {
-            authContainer.classList.add('hidden');
-            adminLoginContainer.classList.remove('hidden');
-        }
-
-        function showAdminView() {
-            authContainer.classList.add('hidden');
-            courseContainer.classList.add('hidden');
-            adminLoginContainer.classList.add('hidden');
-            adminPanel.classList.remove('hidden');
-            shareButton.classList.add('hidden');
-            loadUsersForAdmin();
-        }
-
-        function showCourseView(user) {
-            authContainer.classList.add('hidden');
-            courseContainer.classList.remove('hidden');
-            adminLoginContainer.classList.add('hidden');
-            adminPanel.classList.add('hidden');
-            loadProgress(user);
-        }
-
-        // ---- Lógica de Módulos y Quizzes ----
-        function renderCourseMenu(user, userProgress) {
-            courseMenu.innerHTML = '';
-            modules.forEach(module => {
-                const isPaid = userProgress && userProgress.paid;
-                const isCompleted = userProgress && userProgress.progress && userProgress.progress[module.id] && userProgress.progress[module.id].completed;
-                const isFreeModule = module.id === 1;
-
-                const moduleDiv = document.createElement('div');
-                moduleDiv.className = `p-4 rounded-lg flex items-center justify-between shadow-md cursor-pointer transition-colors duration-300 ${isFreeModule ? 'bg-green-100' : 'bg-yellow-100'}`;
-
-                const moduleTitleSpan = document.createElement('span');
-                moduleTitleSpan.textContent = module.title;
-                moduleDiv.appendChild(moduleTitleSpan);
-
-                const statusIcon = document.createElement('i');
-                if (isCompleted) {
-                    statusIcon.className = 'fas fa-check-circle text-green-500 text-xl';
-                    moduleDiv.classList.add('bg-green-200');
-                } else if (!isFreeModule && !isPaid) {
-                    statusIcon.className = 'fas fa-lock text-gray-500 text-xl';
-                    moduleDiv.classList.add('opacity-50', 'cursor-not-allowed');
-                } else {
-                    statusIcon.className = 'fas fa-arrow-right text-blue-500 text-xl';
                 }
-                moduleDiv.appendChild(statusIcon);
+            },
+            'modulo-2-fundamentos-comunicacion': {
+                title: 'Módulo 2: Los Fundamentos de la Comunicación',
+                description: 'Aprende a comunicarte desde cero con saludos, despedidas y vocabulario esencial.',
+                color: 'bg-indigo-600',
+                media: {
+                    image: 'https://cdn.pixabay.com/photo/2016/09/01/08/25/english-1635056_960_720.jpg', 
+                },
+                lessons: {
+                    'saludos-despedidas': {
+                        title: 'Saludos y Despedidas',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Saludos comunes</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Hello / Hi:</strong> Hola</li>
+                                <li><strong>Good morning:</strong> Buenos días</li>
+                                <li><strong>Good afternoon:</strong> Buenas tardes</li>
+                                <li><strong>Good evening:</strong> Buenas noches (saludo)</li>
+                            </ul>
+                            <h3 class="text-2xl font-semibold mt-4">Despedidas comunes</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Goodbye / Bye:</strong> Adiós</li>
+                                <li><strong>Good night:</strong> Buenas noches (despedida)</li>
+                                <li><strong>See you later:</strong> Nos vemos luego</li>
+                                <li><strong>Take care:</strong> Cuídate</li>
+                            </ul>
+                        <a href="https://drive.google.com/uc?export=download&id=1npwlJdfuw7jhpMgyVTcA144qVsBJyzen" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar PDF de Saludos y Despedidas
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+    <source src="https://archive.org/download/saludos-y-despedidas/Saludos y Despedidas.mp3" type="audio/mpeg">
+    Tu navegador no soporta el elemento de audio.
+    </audio>                                
+    <p class="text-sm mt-2 text-gray-500">Audio: Saludos y Despedidas</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cuál usarías para despedirte en la noche?', options: ['Good evening', 'Good night', 'Good morning'], answer: 'Good night' },
+                            { type: 'true-false', question: '¿"Hi" y "Hello" tienen el mismo significado?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa: "It\'s late, time to say _____."', answer: 'goodbye' },
+                            { type: 'multiple-choice', question: 'Si es mediodía, ¿qué saludo es el más adecuado?', options: ['Good morning', 'Good afternoon', 'Good evening'], answer: 'Good afternoon' },
+                            { type: 'true-false', question: '¿"Take care" significa "cuídate"?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa: "I am going to the store, _____."', answer: 'see you later' }
+                        ]
+                    },
+                        
+'el-alfabeto': {
+    title: 'El Alfabeto y los Sonidos (The Alphabet and Sounds)',
+    content: `
+        <h3 class="text-2xl font-semibold">Concepto</h3>
+        <p>Aprender el alfabeto y la pronunciación correcta de sus letras es la base para leer y escribir en inglés. Aunque se parece al español, algunas letras se pronuncian de forma muy diferente.</p>
+        <h3 class="text-2xl font-semibold mt-4">Pronunciación de las Letras</h3>
+        <ul class="list-disc list-inside space-y-2">
+            <li><strong>A</strong> = ei</li>
+            <li><strong>E</strong> = i</li>
+            <li><strong>I</strong> = ai</li>
+            <li><strong>O</strong> = ou</li>
+            <li><strong>U</strong> = iu</li>
+            <li><strong>R</strong> = ar</li>
+            <li><strong>J</strong> = yei</li>
+            <li><strong>Z</strong> = zi (en inglés americano)</li>
+        </ul>
+        <h3 class="text-2xl font-semibold mt-4">Vectores y Consonantes</h3>
+        <p>El inglés tiene 5 vocales (A, E, I, O, U) y 21 consonantes. Saber la diferencia te ayudará a entender mejor la estructura de las palabras.</p>
+        <div class="mt-4 flex flex-wrap gap-2">
+            <a href="URL_DE_TU_ARCHIVO_DE_DESCARGA" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                <i class="fas fa-download mr-2"></i> Descargar lección
+            </a>
+            <audio controls class="w-full md:w-1/2">
+                <source src="URL_DE_TU_ARCHIVO_DE_AUDIO" type="audio/mpeg">
+                Tu navegador no soporta el elemento de audio.
+            </audio>
+            <p class="text-sm mt-2 text-gray-500">Audio: El Alfabeto</p>
+        </div>
+    `,
+    quiz: [
+        { type: 'multiple-choice', question: '¿Cómo se pronuncia la letra "J" en inglés?', options: ['Ye', 'Jota', 'Jay'], answer: 'Jay' },
+        { type: 'fill-in-the-blank', question: 'La letra que se pronuncia "ei" es la ____.', answer: 'A' },
+        { type: 'true-false', question: 'La letra "W" se pronuncia "doble-u" en inglés.', answer: true },
+        { type: 'multiple-choice', question: '¿Cuál de estas letras es una vocal?', options: ['B', 'L', 'O'], answer: 'O' },
+        { type: 'fill-in-the-blank', question: 'Completa la secuencia: A, B, C, D, ____.', answer: 'E' },
+        { type: 'true-false', question: 'La letra "Z" se pronuncia como "zeta" en inglés.', answer: false }
+                        ]
+                    },
 
-                if (isFreeModule || isPaid) {
-                    moduleDiv.addEventListener('click', () => showModule(module));
+                    'pronombres-personales': {
+                        title: 'Pronombres Personales (Personal Pronouns)',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Son palabras que reemplazan a los sustantivos para referirse a una persona, animal o cosa.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Pronombres</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>I = </strong> yo - Para referirse a uno mismo.</li>
+                                <li><strong>You = </strong> tú, usted, ustedes - Para referirse a la persona o personas con las que se habla. </li>
+                                <li><strong>He = </strong> él - Para referirse a un hombre o chico. </li>
+                                <li><strong>She = </strong> ella - Para referirse a una mujer o chica. </li>
+                                <li><strong>It = </strong> eso - Para referirse a objetos, animales o situaciones, o en general para cosas en singular.</li>
+                                <li><strong>We = </strong> nosotros/as - Para referirse a uno mismo y otras personas. </li>
+                                <li><strong>They = </strong> ellos/as - Para referirse a un grupo de personas, animales u objetos. </li>
+                            </ul>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="https://drive.google.com/uc?export=download&id=1jhGo_egJ2-VJjMBrsTZWKuxGfu-riLyG" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="https://archive.org/download/pronombres_personales_curso/pronombres_personales_curso.mp3" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: Pronombres Personales</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cuál es el pronombre para "ella"?', options: ['He', 'She', 'It'], answer: 'She' },
+                            { type: 'true-false', question: '¿"You" solo se usa para singular?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "_____ are my friends." (Ellos)', answer: 'They' },
+                            { type: 'multiple-choice', question: '¿Qué pronombre usarías para referirte a un perro?', options: ['He', 'It', 'She'], answer: 'It' },
+                            { type: 'true-false', question: '¿"We" significa "tú y yo"?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "_____ is a good student." (Él)', answer: 'He' }
+                        ]
+                    },
                 }
-                
-                courseMenu.appendChild(moduleDiv);
-            });
-            if (isPaid) {
-                shareButton.classList.remove('hidden');
-            } else {
-                shareButton.classList.add('hidden');
+            },
+            'modulo-3-construccion-oraciones': {
+                title: 'Módulo 3: Construcción de Oraciones',
+                description: 'Crea oraciones con el verbo "to be", aprende a hacer preguntas y a usar artículos definidos e indefinidos.',
+                color: 'bg-green-600',
+                media: {
+                    image: 'https://cdn.pixabay.com/photo/2017/08/21/11/17/learn-2665992_960_720.jpg',
+                },
+                lessons: {
+                    'verbo-to-be': {
+                        title: 'El Verbo "To Be"',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>El verbo **"to be"** significa **ser** o **estar**.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Conjugación</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>I am:</strong> yo soy / yo estoy</li>
+                                <li><strong>You are:</strong> tú eres / tú estás</li>
+                                <li><strong>He / She / It is:</strong> él/ella/eso es / él/ella/eso está</li>
+                                <li><strong>We are:</strong> nosotros somos / nosotros estamos</li>
+                                <li><strong>They are:</strong> ellos/ellas son / ellos/ellas están</li>
+                            </ul>
+                            <h3 class="text-2xl font-semibold mt-4">Ejemplos</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>I **am** a student. (Soy un estudiante.)</li>
+                                <li>You **are** happy. (Tú estás feliz.)</li>
+                                <li>She **is** in the house. (Ella está en la casa.)</li>
+                            </ul>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="URL_DE_TU_ARCHIVO_DE_DESCARGA" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="URL_DE_TU_ARCHIVO_DE_AUDIO" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: El Verbo "To Be"</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cuál es la conjugación correcta para "I"?', options: ['is', 'are', 'am'], answer: 'am' },
+                            { type: 'true-false', question: '¿El verbo "to be" significa "ser" o "estar"?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "She _____ a doctor."', answer: 'is' },
+                            { type: 'multiple-choice', question: '¿Qué pronombre usa "are"?', options: ['He', 'She', 'They'], answer: 'They' },
+                            { type: 'true-false', question: '¿"We is" es la conjugación correcta para "we"?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "I _____ happy."', answer: 'am' }
+                        ]
+                    },
+                    'articulos-a-an-the': {
+                        title: 'Artículos: A, An y The',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Los artículos son palabras que se usan antes de los sustantivos. **"A"** y **"An"** son indefinidos (un, una) y **"The"** es definido (el, la, los, las).</p>
+                            <h4 class="text-xl font-semibold mt-4">A y An</h4>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>Se usan para referirse a una cosa en singular no específica.</li>
+                                <li>**A** se usa antes de palabras que empiezan con sonido de consonante. Ej: **a** car, **a** house.</li>
+                                <li>**An** se usa antes de palabras que empiezan con sonido de vocal. Ej: **an** apple, **an** umbrella.</li>
+                            </ul>
+                            <h4 class="text-xl font-semibold mt-4">The</h4>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>Se usa para referirse a una cosa específica, tanto en singular como en plural.</li>
+                                <li>Ej: **the** sun, **the** keys.</li>
+                            </ul>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="URL_DE_TU_ARCHIVO_DE_DESCARGA" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="URL_DE_TU_ARCHIVO_DE_AUDIO" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: Artículos: A, An y The</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cuál es el artículo correcto para "elephant"?', options: ['a', 'an', 'the'], answer: 'an' },
+                            { type: 'true-false', question: '¿"A" se usa antes de palabras que empiezan con sonido de vocal?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "I see _____ cat."', answer: 'a' },
+                            { type: 'multiple-choice', question: '¿Qué artículo se usa para referirse a una cosa específica?', options: ['a', 'an', 'the'], answer: 'the' },
+                            { type: 'true-false', question: '¿El artículo "the" tiene plural?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "She wants _____ orange."', answer: 'an' }
+                        ]
+                    },
+                    'adjetivos-simples': {
+                        title: 'Adjetivos Simples',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Los adjetivos son palabras que describen o modifican a los sustantivos.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Características de los Adjetivos en Inglés</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>Siempre van **antes del sustantivo** que modifican. Ej: **big** house, **red** car.</li>
+                                <li>**No tienen plural.** Un adjetivo es el mismo para singular y plural. Ej: **new** car, **new** cars.</li>
+                                <li>**No tienen género.** No cambian si el sustantivo es masculino o femenino. Ej: **beautiful** woman, **beautiful** man.</li>
+                            </ul>
+                            <h3 class="text-2xl font-semibold mt-4">Ejemplos de Adjetivos</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>**Big** (grande)</li>
+                                <li>**Small** (pequeño)</li>
+                                <li>**Happy** (feliz)</li>
+                                <li>**Sad** (triste)</li>
+                                <li>**Good** (bueno)</li>
+                                <li>**Bad** (malo)</li>
+                            </ul>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="URL_DE_TU_ARCHIVO_DE_DESCARGA" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="URL_DE_TU_ARCHIVO_DE_AUDIO" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: Adjetivos Simples</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'true-false', question: '¿Los adjetivos en inglés se colocan después del sustantivo?', answer: false },
+                            { type: 'multiple-choice', question: '¿Qué adjetivo describe a un sustantivo?', options: ['Run', 'Big', 'Quickly'], answer: 'Big' },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "She has a _____ house." (beautiful)', answer: 'beautiful' },
+                            { type: 'true-false', question: '¿Los adjetivos tienen género en inglés?', answer: false },
+                            { type: 'multiple-choice', question: '¿Cuál de estos es un adjetivo?', options: ['Walk', 'Car', 'Tall'], answer: 'Tall' },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "The _____ children are playing." (happy)', answer: 'happy' },
+                            { type: 'true-false', question: '¿Los adjetivos en inglés no tienen forma plural?', answer: true },
+                            { type: 'multiple-choice', question: '¿Cómo dirías "libros interesantes"?', options: ['Books interesting', 'Interesting books', 'Books are interesting'], answer: 'Interesting books' },
+                            { type: 'fill-in-the-blank', question: 'The soup is _____." (hot)', answer: 'hot' }
+                        ]
+                    }
+                }
+            },
+            'modulo-4-el-verbo-y-mas': {
+                title: 'Módulo 4: El Verbo y Más',
+                description: 'Aprende los verbos más comunes, el presente progresivo y auxiliares clave.',
+                color: 'bg-teal-500',
+                media: {
+                    image: 'https://images.unsplash.com/photo-1549057442-5f6531557007?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8fGVufDB8fHx8fA%3D%3D',
+                },
+                lessons: {
+                    'verbos-comunes': {
+                        title: 'Verbos Comunes',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Los verbos son palabras que indican una acción o un estado. Son la parte más importante de una oración.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Verbos que Usarás a Diario</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>To go:</strong> Ir</li>
+                                <li><strong>To do:</strong> Hacer</li>
+                                <li><strong>To have:</strong> Tener</li>
+                                <li><strong>To say:</strong> Decir</li>
+                                <li><strong>To get:</strong> Obtener / Conseguir</li>
+                                <li><strong>To make:</strong> Hacer / Fabricar</li>
+                                <li><strong>To know:</strong> Saber / Conocer</li>
+                                <li><strong>To think:</strong> Pensar</li>
+                                <li><strong>To see:</strong> Ver</li>
+                                <li><strong>To come:</strong> Venir</li>
+                            </ul>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="URL_DE_TU_ARCHIVO_DE_DESCARGA" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="URL_DE_TU_ARCHIVO_DE_AUDIO" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: Verbos Comunes</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cuál es el verbo para "hacer"?', options: ['To go', 'To do', 'To see'], answer: 'To do' },
+                            { type: 'true-false', question: '¿"To see" significa "saber"?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "I need to _____ to the store."', answer: 'go' },
+                            { type: 'multiple-choice', question: '¿Qué verbo significa "venir"?', options: ['To come', 'To have', 'To make'], answer: 'To come' },
+                            { type: 'true-false', question: '¿"To think" significa "pensar"?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "Do you _____ what he said?"', answer: 'know' }
+                        ]
+                    },
+                    'presente-progresivo': {
+                        title: 'Presente Progresivo (Present Continuous)',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>El presente progresivo se usa para hablar de acciones que están sucediendo **en este momento**.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Estructura</h3>
+                            <p>Sujeto + Verbo **to be** (am, is, are) + Verbo principal con terminación **-ing**.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Ejemplos</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>I **am running**. (Estoy corriendo.)</li>
+                                <li>She **is eating**. (Ella está comiendo.)</li>
+                                <li>They **are studying**. (Ellos están estudiando.)</li>
+                            </ul>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="URL_DE_TU_ARCHIVO_DE_DESCARGA" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="URL_DE_TU_ARCHIVO_DE_AUDIO" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: Presente Progresivo</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cuál es la forma correcta de "they" en presente progresivo?', options: ['They are talking', 'They talking', 'They is talking'], answer: 'They are talking' },
+                            { type: 'true-false', question: '¿El presente progresivo se usa para acciones en el pasado?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "He is _____." (eat)', answer: 'eating' },
+                            { type: 'multiple-choice', question: '¿Cómo dirías "ella está leyendo"?', options: ['She reading', 'She is reading', 'She reads'], answer: 'She is reading' },
+                            { type: 'true-false', question: '¿"You are walking" significa "tú estás caminando"?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "You _____ on the phone." (talk)', answer: 'are talking' }
+                        ]
+                    },
+                    'auxiliares-do-does': {
+                        title: 'Los Auxiliares: Do y Does',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Los auxiliares **do** y **does** son verbos especiales que nos ayudan a formar preguntas y oraciones negativas en el presente simple. No tienen un significado propio en español en este contexto, simplemente cumplen una función gramatical.</p>
+                            <h4 class="text-xl font-semibold mt-4">¿Cuándo usar Do y Does?</h4>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>**DO:** Se usa con los pronombres **I, you, we, they**. <br> Ej: **Do** you like coffee? (¿Te gusta el café?)</li>
+                                <li>**DOES:** Se usa con los pronombres de tercera persona en singular: **he, she, it**. <br> Ej: **Does** she live here? (¿Ella vive aquí?)</li>
+                            </ul>
+                            <h4 class="text-xl font-semibold mt-4">Estructura de las Oraciones</h4>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>**Preguntas:** Do/Does + Sujeto + Verbo principal? <br> Ej: **Do** they play soccer?</li>
+                                <li>**Negativas:** Sujeto + do/does + not + Verbo principal. <br> Ej: We **do not** work today.</li>
+                            </ul>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="URL_DE_TU_ARCHIVO_DE_DESCARGA" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="URL_DE_TU_ARCHIVO_DE_AUDIO" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: Los Auxiliares: Do y Does</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Qué auxiliar se usa con "she"?', options: ['Do', 'Does', 'Is'], answer: 'Does' },
+                            { type: 'true-false', question: '¿"Do not" se usa para oraciones negativas?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "_____ they like pizza?"', answer: 'Do' },
+                            { type: 'multiple-choice', question: '¿Cuál es la forma negativa de "He plays soccer"?', options: ['He does not play soccer', 'He do not play soccer', 'He is not play soccer'], answer: 'He does not play soccer' },
+                            { type: 'true-false', question: '¿"Does" se usa para "I"?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "We _____ not have a car."', answer: 'do' }
+                        ]
+                    }
+                }
+            },
+            'modulo-5-vocabulario-esencial': {
+                title: 'Módulo 5: Vocabulario Esencial',
+                description: 'Amplía tu vocabulario con palabras para el trabajo, la familia, la comida y la vida cotidiana.',
+                color: 'bg-pink-500',
+                media: {
+                    image: 'https://images.unsplash.com/photo-1549057442-5f6531557007?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8fGVufDB8fHx8fA%3D%3D',
+                },
+                lessons: {
+                    'vocabulario-comida': {
+                        title: 'Vocabulario de Comida',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Alimentos Comunes</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Apple:</strong> Manzana</li>
+                                <li><strong>Bread:</strong> Pan</li>
+                                <li><strong>Cheese:</strong> Queso</li>
+                                <li><strong>Milk:</strong> Leche</li>
+                                <li><strong>Chicken:</strong> Pollo</li>
+                                <li><strong>Rice:</strong> Arroz</li>
+                                <li><strong>Pasta:</strong> Pasta</li>
+                                <li><strong>Water:</strong> Agua</li>
+                            </ul>
+                            <h3 class="text-2xl font-semibold mt-4">Frases útiles</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>I am hungry. (Tengo hambre.)</li>
+                                <li>I am thirsty. (Tengo sed.)</li>
+                                <li>What do you want to eat? (¿Qué quieres comer?)</li>
+                            </ul>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="URL_DE_TU_ARCHIVO_DE_DESCARGA" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="URL_DE_TU_ARCHIVO_DE_AUDIO" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: Vocabulario de Comida</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cómo se dice "pollo" en inglés?', options: ['Fish', 'Chicken', 'Egg'], answer: 'Chicken' },
+                            { type: 'true-false', question: '¿"I am hungry" significa "tengo sed"?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "Please pass the _____."', answer: 'salt' }
+                        ]
+                    },
+                    'vocabulario-familia': {
+                        title: 'Vocabulario de la Familia',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Miembros de la Familia</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Mother:</strong> Madre</li>
+                                <li><strong>Father:</strong> Padre</li>
+                                <li><strong>Sister:</strong> Hermana</li>
+                                <li><strong>Brother:</strong> Hermano</li>
+                                <li><strong>Grandmother:</strong> Abuela</li>
+                                <li><strong>Grandfather:</strong> Abuelo</li>
+                                <li><strong>Aunt:</strong> Tía</li>
+                                <li><strong>Uncle:</strong> Tío</li>
+                                <li><strong>Cousin:</strong> Primo/a</li>
+                            </ul>
+                            <h3 class="text-2xl font-semibold mt-4">Frases útiles</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>This is my family. (Esta es mi familia.)</li>
+                                <li>I have one brother. (Tengo un hermano.)</li>
+                                <li>My mother is a teacher. (Mi madre es una maestra.)</li>
+                            </ul>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="https://drive.google.com/uc?export=download&id=1npwlJdfuw7jhpMgyVTcA144qVsBJyzen" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="https://archive.org/download/saludos-y-despedidas/Saludos y Despedidas.mp3" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: Lección</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cuál es la palabra en inglés para "silla"?', options: ['Table', 'Chair', 'Book'], answer: 'Chair' },
+                            { type: 'true-false', question: '¿"Pen" significa "lápiz"?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "I need to open the _____."', answer: 'door' },
+                            { type: 'multiple-choice', question: '¿Cómo se dice "computadora" en inglés?', options: ['Phone', 'Book', 'Computer'], answer: 'Computer' },
+                            { type: 'true-false', question: '¿"Brother" significa "hermana"?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "My _____ is a man."', answer: 'father' }
+                        ]
+                    }
+                }
+            },
+            'modulo-6-preposiciones-y-adjetivos': {
+                title: 'Módulo 6: Preposiciones y Adjetivos Posesivos',
+                description: 'Aprende a usar preposiciones clave, pronombres demostrativos y adjetivos posesivos.',
+                color: 'bg-purple-600',
+                media: {
+                    image: 'https://images.unsplash.com/photo-1549057442-5f6531557007?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8fGVufDB8fHx8fA%3D%3D',
+                },
+                lessons: {
+                    'las-preposiciones-basicas': {
+                        title: 'Las Preposiciones: In, On, y At',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Las preposiciones son palabras que conectan sustantivos con otras partes de una oración. Son fundamentales para indicar lugar, tiempo, dirección y más. Hoy nos enfocaremos en las preposiciones básicas de lugar y tiempo.</p>
+                            <h4 class="text-xl font-semibold mt-4">Preposición: In</h4>
+                            <p>Se usa para lugares grandes o espacios cerrados. También para meses, estaciones y años.</p>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>Lugar: **in** the city, **in** a box, **in** the house.</li>
+                                <li>Tiempo: **in** July, **in** winter, **in** 2024.</li>
+                            </ul>
+                            <h4 class="text-xl font-semibold mt-4">Preposición: On</h4>
+                            <p>Se usa para superficies, días de la semana y fechas específicas.</p>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>Lugar: **on** the table, **on** the wall.</li>
+                                <li>Tiempo: **on** Monday, **on** July 15th.</li>
+                            </ul>
+                            <h4 class="text-xl font-semibold mt-4">Preposición: At</h4>
+                            <p>Se usa para puntos específicos de lugar y tiempo. Ejemplos: direcciones, la hora, eventos específicos.</p>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>Lugar: **at** the store, **at** school.</li>
+                                <li>Tiempo: **at** 3 o'clock, **at** night.</li>
+                            </ul>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="URL_DE_TU_ARCHIVO_DE_DESCARGA" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="URL_DE_TU_ARCHIVO_DE_AUDIO" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: Las Preposiciones: In, On, y At</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Qué preposición usarías para el lugar "the kitchen"?', options: ['in', 'on', 'at'], answer: 'in' },
+                            { type: 'true-false', question: '¿"On" se usa para meses?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "The party is _____ Friday."', answer: 'on' },
+                            { type: 'multiple-choice', question: '¿Cuál usarías para la hora "5 o\'clock"?', options: ['in', 'on', 'at'], answer: 'at' },
+                            { type: 'true-false', question: '¿"In" se usa para países?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "The book is _____ the shelf."', answer: 'on' }
+                        ]
+                    },
+                    'adjetivos-posesivos': {
+                        title: 'Adjetivos Posesivos (Possessive Adjectives)',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Son palabras que usamos para mostrar que algo le pertenece a alguien. Siempre van antes del sustantivo que poseen.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Adjetivos Posesivos</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>**My** (mi, mis): **My** car is new.</li>
+                                <li>**Your** (tu, tus, su, sus): **Your** book is on the table.</li>
+                                <li>**His** (su, sus, de él): **His** dog is big.</li>
+                                <li>**Her** (su, sus, de ella): **Her** dress is beautiful.</li>
+                                <li>**Its** (su, sus, de eso): **Its** color is red.</li>
+                                <li>**Our** (nuestro/a, nuestros/as): **Our** family is nice.</li>
+                                <li>**Their** (su, sus, de ellos/as): **Their** dog is cute.</li>
+                            </ul>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="https://drive.google.com/uc?export=download&id=1jhGo_egJ2-VJjMBrsTZWKuxGfu-riLyG" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="https://archive.org/download/pronombres_personales_curso/pronombres_personales_curso.mp3" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: Pronombres Personales</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Cuál es el adjetivo posesivo para "I"?', options: ['Your', 'My', 'His'], answer: 'My' },
+                            { type: 'true-false', question: '¿Los adjetivos posesivos van después del sustantivo?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "This is _____ book." (You)', answer: 'your' },
+                            { type: 'multiple-choice', question: 'Si la dueña es una mujer, ¿qué adjetivo posesivo usarías para referirte a su bolso?', options: ['His', 'Her', 'Its'], answer: 'Her' },
+                            { type: 'true-false', question: '¿"Our" significa "nuestro"?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "The students love _____ teacher." (ellos)', answer: 'their' }
+                        ]
+                    },
+                    'pronombres-demostrativos': {
+                        title: 'Pronombres Demostrativos (This, That, These, Those)',
+                        content: `
+                            <h3 class="text-2xl font-semibold">Concepto</h3>
+                            <p>Son palabras que señalan un sustantivo y nos indican si está cerca o lejos, y si es singular o plural.</p>
+                            <h3 class="text-2xl font-semibold mt-4">Pronombres Demostrativos</h3>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li>**This** (esto/a, este): Para cosas en singular que están **cerca**. Ej: **This** is my book.</li>
+                                <li>**That** (eso/a, ese): Para cosas en singular que están **lejos**. Ej: **That** is her house.</li>
+                                <li>**These** (estos/as): Para cosas en plural que están **cerca**. Ej: **These** are my friends.</li>
+                                <li>**Those** (esos/as): Para cosas en plural que están **lejos**. Ej: **Those** are the cars.</li>
+                            </ul>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <a href="URL_DE_TU_ARCHIVO_DE_DESCARGA" target="_blank" class="bg-blue-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Descargar lección
+                                </a>
+                                <audio controls class="w-full md:w-1/2">
+                                    <source src="URL_DE_TU_ARCHIVO_DE_AUDIO" type="audio/mpeg">
+                                    Tu navegador no soporta el elemento de audio.
+                                </audio>
+                                <p class="text-sm mt-2 text-gray-500">Audio: Pronombres Demostrativos</p>
+                            </div>
+                        `,
+                        quiz: [
+                            { type: 'multiple-choice', question: '¿Qué pronombre usarías para referirte a una manzana que tienes en la mano?', options: ['That', 'This', 'These'], answer: 'This' },
+                            { type: 'true-false', question: '¿"Those" se usa para cosas en singular?', answer: false },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "I love _____ shirt." (cerca, singular)', answer: 'this' },
+                            { type: 'multiple-choice', question: '¿Qué pronombre usarías para hablar de los autos que están lejos?', options: ['These', 'That', 'Those'], answer: 'Those' },
+                            { type: 'true-false', question: '¿"This" y "These" se usan para referirse a cosas que están cerca?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Completa la frase: "_____ are my friends." (cerca, plural)', answer: 'These' },
+                            { type: 'multiple-choice', question: '¿Cuál es la forma plural de "That"?', options: ['This', 'Those', 'These'], answer: 'Those' },
+                            { type: 'true-false', question: '¿"That" se usa para cosas que están lejos?', answer: true },
+                            { type: 'fill-in-the-blank', question: 'Look at _____ bird over there." (lejos, singular)', answer: 'that' },
+                            { type: 'multiple-choice', question: '¿Qué pronombre usarías para hablar de varios libros que están en la mesa de enfrente?', options: ['These', 'Those', 'This'], answer: 'Those' }
+                        ]
+                    }
+                }
+            },
+            'analisis-rendimiento-academico': {
+                title: 'Análisis del Rendimiento Académico',
+                description: 'Analiza tu progreso y rendimiento en los cuestionarios para potenciar tu aprendizaje.',
+                color: 'bg-sky-500',
+                isSpecialCard: true
             }
+        };
+
+        const blockedModules = ['modulo-2-fundamentos-comunicacion', 'modulo-3-construccion-oraciones', 'modulo-4-el-verbo-y-mas', 'modulo-5-vocabulario-esencial', 'modulo-6-preposiciones-y-adjetivos'];
+        let currentModule = null;
+        let currentLesson = null;
+        let quizQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timerId = null;
+        let timeLeft = 900; // 15 minutes in seconds
+
+        const mainMenu = document.getElementById('main-menu');
+        const moduleList = document.getElementById('module-list');
+        const moduleView = document.getElementById('module-view');
+        const moduleTitle = document.getElementById('module-title');
+        const moduleDescription = document.getElementById('module-description');
+        const moduleMedia = document.getElementById('module-media');
+        const lessonList = document.getElementById('lesson-list');
+        const lessonTemplate = document.getElementById('lesson-template');
+        const quizTemplate = document.getElementById('quiz-template');
+        const quizQuestionsContainer = document.getElementById('quiz-questions');
+        const feedbackMessageElement = document.getElementById('feedback-message');
+        const progressText = document.getElementById('progress-text');
+        const progressBar = document.getElementById('progress-bar');
+        const quizResults = document.getElementById('quiz-results');
+        const scoreText = document.getElementById('score-text');
+        const timerElement = document.getElementById('timer');
+        const blockedModal = document.getElementById('blocked-modal');
+        const adminButton = document.getElementById('admin-button');
+        const adminModal = document.getElementById('admin-modal');
+        const unlockButton = document.getElementById('unlock-button');
+        const adminPasswordInput = document.getElementById('admin-password-input');
+        const adminMessage = document.getElementById('admin-message');
+        const matchingGameTemplate = document.getElementById('matching-game-template');
+        const performanceAnalysisTemplate = document.getElementById('performance-analysis-template');
+        const performanceDetails = document.getElementById('performance-details');
+        const shareButton = document.getElementById('share-button');
+
+        let isAllModulesUnlocked = false;
+        let userProgress = {};
+
+        function saveProgress() {
+            localStorage.setItem('userProgress', JSON.stringify(userProgress));
+            localStorage.setItem('isAllModulesUnlocked', isAllModulesUnlocked);
         }
 
-        function showModule(module) {
-            currentModule = module;
-            courseMenu.classList.add('hidden');
-            moduleContentDiv.classList.remove('hidden');
-            moduleTitle.textContent = module.title;
-            moduleText.textContent = module.content;
-
-            if (module.quizzes) {
-                quizContainer.classList.remove('hidden');
-                currentQuestionIndex = 0;
-                renderQuiz();
-            } else {
-                quizContainer.classList.add('hidden');
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('userProgress');
+            const savedUnlockStatus = localStorage.getItem('isAllModulesUnlocked');
+            if (savedProgress) {
+                userProgress = JSON.parse(savedProgress);
+            }
+            if (savedUnlockStatus) {
+                isAllModulesUnlocked = JSON.parse(savedUnlockStatus);
             }
         }
         
-        function renderQuiz() {
-            const quiz = currentModule.quizzes[currentQuestionIndex];
-            if (!quiz) {
-                finishQuiz();
-                return;
-            }
-            questionText.textContent = quiz.question;
-            quizOptions.innerHTML = '';
-            quiz.options.forEach(option => {
-                const button = document.createElement('button');
-                button.textContent = option;
-                button.className = 'w-full text-left p-2 rounded-md bg-gray-200 hover:bg-gray-300 transition duration-300';
-                button.onclick = () => checkAnswer(option, quiz.answer);
-                quizOptions.appendChild(button);
-            });
-        }
+        function renderModules() {
+            moduleList.innerHTML = '';
+            for (const key in modules) {
+                if (modules.hasOwnProperty(key)) {
+                    const module = modules[key];
+                    const isBlocked = blockedModules.includes(key) && !isAllModulesUnlocked;
+                    const moduleCard = document.createElement('div');
+                    moduleCard.className = `module-card card p-6 text-center transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer ${module.color} text-white relative`;
+                    
+                    let icon = 'fas fa-book-open';
+                    let statusText = '';
+                    let action = `showModuleView('${key}')`;
 
-        function checkAnswer(selectedOption, correctAnswer) {
-            if (selectedOption === correctAnswer) {
-                alert('¡Respuesta correcta!');
-                if (currentQuestionIndex < currentModule.quizzes.length - 1) {
-                    currentQuestionIndex++;
-                    renderQuiz();
-                } else {
-                    finishQuiz();
-                }
-            } else {
-                alert('Respuesta incorrecta. Inténtalo de nuevo.');
-            }
-        }
-
-        function finishQuiz() {
-            alert('¡Quiz completado!');
-            const user = auth.currentUser;
-            if (user) {
-                updateProgress(user.uid, currentModule.id, true);
-            }
-            moduleContentDiv.classList.add('hidden');
-            courseMenu.classList.remove('hidden');
-            loadProgress(user);
-        }
-
-        backToMenuButton.addEventListener('click', () => {
-            moduleContentDiv.classList.add('hidden');
-            courseMenu.classList.remove('hidden');
-        });
-
-        // --- Lógica del Administrador ---
-        adminButton.addEventListener('click', showAdminLogin);
-        adminLoginButton.addEventListener('click', () => {
-            const email = adminEmailInput.value;
-            const password = adminPasswordInput.value;
-            auth.signInWithEmailAndPassword(email, password)
-                .then(result => {
-                    database.ref('users/' + result.user.uid).update({ isAdmin: true });
-                })
-                .catch(error => {
-                    adminMessage.textContent = `Error de acceso: ${error.message}`;
-                });
-        });
-        
-        adminSignOutButton.addEventListener('click', () => {
-            auth.signOut();
-        });
-
-        function loadUsersForAdmin() {
-            const usersList = document.getElementById('users-list');
-            usersList.innerHTML = '';
-            database.ref('users').once('value').then(snapshot => {
-                const users = snapshot.val();
-                if (users) {
-                    Object.keys(users).forEach(uid => {
-                        const user = users[uid];
-                        const userDiv = document.createElement('div');
-                        userDiv.className = 'p-3 border rounded-md flex items-center justify-between';
-                        
-                        const statusColor = user.paid ? 'text-green-500' : 'text-yellow-500';
-                        const statusText = user.paid ? 'Acceso activado' : 'Pendiente de pago';
-
-                        userDiv.innerHTML = `
-                            <span>${user.email || 'Sin correo'}</span>
-                            <span class="${statusColor}">${statusText}</span>
-                        `;
-                        
-                        if (!user.paid) {
-                            const activateButton = document.createElement('button');
-                            activateButton.textContent = 'Activar Acceso';
-                            activateButton.className = 'bg-blue-500 text-white font-bold py-1 px-3 rounded-md hover:bg-blue-600 transition duration-300';
-                            activateButton.onclick = () => activateAccess(uid);
-                            userDiv.appendChild(activateButton);
+                    if (isBlocked) {
+                        moduleCard.classList.add('opacity-50', 'cursor-not-allowed');
+                        icon = 'fas fa-lock';
+                        statusText = 'Bloqueado';
+                        action = `showBlockedMessage()`;
+                    } else if (module.isSpecialCard) {
+                        icon = 'fas fa-chart-line';
+                        action = `showPerformanceAnalysis()`;
+                    } else {
+                        const { completed, total, percentage } = calculateModuleProgress(key);
+                        if (total > 0) {
+                            statusText = `Progreso: ${percentage.toFixed(0)}%`;
                         }
-                        usersList.appendChild(userDiv);
-                    });
-                } else {
-                    usersList.innerHTML = '<p class="text-gray-500">No hay usuarios registrados.</p>';
+                    }
+
+                    moduleCard.innerHTML = `
+                        <div class="flex flex-col items-center justify-center">
+                            <i class="${icon} text-3xl mb-2"></i>
+                            <h3 class="text-xl font-bold">${module.title}</h3>
+                            <p class="text-sm mt-1">${module.description}</p>
+                            ${statusText ? `<p class="text-xs mt-2 font-semibold">${statusText}</p>` : ''}
+                        </div>
+                    `;
+                    moduleCard.onclick = () => eval(action);
+                    moduleList.appendChild(moduleCard);
                 }
-            });
-        }
-        
-        function activateAccess(uid) {
-            database.ref('users/' + uid).update({ paid: true }).then(() => {
-                alert('Acceso activado con éxito.');
-                loadUsersForAdmin();
-            }).catch(error => {
-                alert('Error al activar el acceso: ' + error.message);
-            });
-        }
-
-        // --- Funciones de Utilidad y Persistencia ---
-        function loadProgress(user) {
-            database.ref('users/' + user.uid).once('value').then(snapshot => {
-                const userData = snapshot.val() || {};
-                renderCourseMenu(user, userData);
-            });
-        }
-        
-        function updateProgress(userId, moduleId, completed) {
-            database.ref('users/' + userId + '/progress/' + moduleId).update({
-                completed: completed
-            });
+            }
+            
+            // Add the matching game card
+            const matchingGameCard = document.createElement('div');
+            matchingGameCard.className = 'module-card card p-6 text-center transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer bg-yellow-500 text-white relative';
+            matchingGameCard.innerHTML = `
+                <div class="flex flex-col items-center justify-center">
+                    <i class="fas fa-brain text-3xl mb-2"></i>
+                    <h3 class="text-xl font-bold">Juego de Memoria</h3>
+                    <p class="text-sm mt-1">¡Pon a prueba tu memoria con este divertido juego!</p>
+                </div>
+            `;
+            matchingGameCard.onclick = showMatchingGame;
+            moduleList.appendChild(matchingGameCard);
         }
 
-        shareButton.addEventListener('click', () => {
+        function shareCourse() {
             if (navigator.share) {
                 navigator.share({
-                    title: document.title,
-                    text: '¡Aprende con Douglas! Un curso increíble para mejorar tus habilidades. El primer módulo es gratis.',
-                    url: window.location.href,
-                }).catch(console.error);
+                    title: 'Aprende con Douglas: Inglés Básico',
+                    text: 'Aprende con Douglas. Únete al curso de Inglés Básico y da el primer paso hacia el dominio de un nuevo idioma',
+                    url: 'https://stepbystepacademy.github.io/englishtest/'
+                }).then(() => {
+                    console.log('Contenido compartido con éxito');
+                }).catch((error) => {
+                    console.error('Error al compartir:', error);
+                });
             } else {
-                const tempInput = document.createElement('input');
-                document.body.appendChild(tempInput);
-                tempInput.value = window.location.href;
-                tempInput.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempInput);
-                alert('Enlace copiado al portapapeles. ¡Compártelo con tus amigos!');
+                // En caso de que el navegador no soporte la API de compartir, se puede
+                // ofrecer un fallback, como copiar el enlace al portapapeles.
+                alert('Tu navegador no soporta la función de compartir. Puedes copiar el enlace: https://stepbystepacademy.github.io/englishtest/');
             }
+        }
+
+        function calculateModuleProgress(moduleId) {
+            let completed = 0;
+            let total = 0;
+            const moduleLessons = modules[moduleId].lessons;
+            if (moduleLessons) {
+                total = Object.keys(moduleLessons).length;
+                if (userProgress[moduleId]) {
+                    completed = Object.values(userProgress[moduleId]).filter(lesson => lesson.passed).length;
+                }
+            }
+            const percentage = total > 0 ? (completed / total) * 100 : 0;
+            return { completed, total, percentage };
+        }
+        
+        function hideAllViews() {
+            const views = [mainMenu, moduleView, lessonTemplate, quizTemplate, matchingGameTemplate, performanceAnalysisTemplate];
+            views.forEach(view => view.classList.add('hidden'));
+            const dynamicViews = document.querySelectorAll('#lesson-view, #quiz-view');
+            dynamicViews.forEach(view => view.remove());
+        }
+
+        function showMainMenu() {
+            hideAllViews();
+            mainMenu.classList.remove('hidden');
+            renderModules();
+        }
+        
+        function showModuleView(moduleId) {
+            hideAllViews();
+            currentModule = moduleId;
+            moduleView.classList.remove('hidden');
+            const module = modules[moduleId];
+            moduleTitle.textContent = module.title;
+            moduleDescription.textContent = module.description;
+            if (module.media) {
+                renderMedia(module.media, moduleMedia);
+            } else {
+                moduleMedia.innerHTML = '';
+            }
+            renderLessons(module.lessons);
+        }
+
+        function renderMedia(media, container) {
+            container.innerHTML = '';
+            if (media.image) {
+                const img = document.createElement('img');
+                img.src = media.image;
+                img.alt = `Imagen de ${modules[currentModule].title}`;
+                img.className = 'w-full md:w-1/2 mx-auto rounded-lg shadow-lg mb-4';
+                container.appendChild(img);
+            }
+        }
+
+        function renderLessons(lessons) {
+            lessonList.innerHTML = '';
+            const lessonColors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 'bg-purple-500', 'bg-teal-500'];
+            const lessonKeys = Object.keys(lessons);
+            lessonKeys.forEach((key, i) => {
+                const lesson = lessons[key];
+                const lessonCard = document.createElement('div');
+                const color = lessonColors[i % lessonColors.length];
+                lessonCard.className = `card p-6 text-center transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer ${color} text-white`;
+                lessonCard.innerHTML = `
+                    <i class="fas fa-graduation-cap text-3xl text-white mb-2"></i>
+                    <h4 class="text-xl font-semibold">${lesson.title}</h4>
+                `;
+                lessonCard.onclick = () => showLesson(key);
+                lessonList.appendChild(lessonCard);
+            });
+        }
+        
+        function showLesson(lessonId) {
+            currentLesson = lessonId;
+            const lesson = modules[currentModule].lessons[currentLesson];
+            hideAllViews();
+            lessonTemplate.classList.remove('hidden');
+            document.getElementById('lesson-title').textContent = lesson.title;
+            document.getElementById('lesson-content').innerHTML = lesson.content;
+            document.getElementById('back-to-modules-button').onclick = () => showModuleView(currentModule);
+            
+            const showQuizButton = document.getElementById('show-quiz-button');
+            if (lesson.quiz) {
+                showQuizButton.classList.remove('hidden');
+                showQuizButton.onclick = () => showQuiz(lesson.quiz);
+            } else {
+                showQuizButton.classList.add('hidden');
+            }
+        }
+
+        function showQuiz(questions) {
+            hideAllViews();
+            quizTemplate.classList.remove('hidden');
+            quizQuestions = questions;
+            currentQuestionIndex = 0;
+            score = 0;
+            feedbackMessageElement.textContent = '';
+            quizResults.classList.add('hidden');
+            document.getElementById('back-to-lesson-button').onclick = () => showLesson(currentLesson);
+            startTimer();
+            renderQuestion();
+        }
+
+        function startTimer() {
+            timeLeft = 900; // 15 minutes
+            timerElement.textContent = formatTime(timeLeft);
+            clearInterval(timerId);
+            timerId = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = formatTime(timeLeft);
+                if (timeLeft <= 0) {
+                    clearInterval(timerId);
+                    endQuiz();
+                }
+            }, 1000);
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+        }
+
+        function renderQuestion() {
+            const question = quizQuestions[currentQuestionIndex];
+            quizQuestionsContainer.innerHTML = '';
+            feedbackMessageElement.textContent = '';
+            if (question) {
+                quizQuestionsContainer.classList.remove('hidden');
+                document.getElementById('progress-container').classList.remove('hidden');
+                document.getElementById('timer-container').classList.remove('hidden');
+                feedbackMessageElement.classList.remove('hidden');
+                
+                const questionElement = document.createElement('div');
+                questionElement.className = 'bg-gray-100 p-4 rounded-lg mb-4';
+                questionElement.innerHTML = `<h4 class="text-xl font-semibold mb-2">${currentQuestionIndex + 1}. ${question.question}</h4>`;
+                
+                const answerContainer = document.createElement('div');
+                answerContainer.className = 'space-y-2';
+                
+                if (question.type === 'multiple-choice') {
+                    question.options.forEach(option => {
+                        const button = document.createElement('button');
+                        button.textContent = option;
+                        button.className = 'w-full py-2 px-4 rounded-full bg-gray-200 hover:bg-gray-300 transition duration-300';
+                        button.onclick = () => checkAnswer(option);
+                        answerContainer.appendChild(button);
+                    });
+                } else if (question.type === 'true-false') {
+                    const trueButton = document.createElement('button');
+                    trueButton.textContent = 'Verdadero';
+                    trueButton.className = 'w-full py-2 px-4 rounded-full bg-gray-200 hover:bg-gray-300 transition duration-300';
+                    trueButton.onclick = () => checkAnswer(true);
+                    answerContainer.appendChild(trueButton);
+                    
+                    const falseButton = document.createElement('button');
+                    falseButton.textContent = 'Falso';
+                    falseButton.className = 'w-full py-2 px-4 rounded-full bg-gray-200 hover:bg-gray-300 transition duration-300 mt-2';
+                    falseButton.onclick = () => checkAnswer(false);
+                    answerContainer.appendChild(falseButton);
+                } else if (question.type === 'fill-in-the-blank') {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.placeholder = 'Escribe tu respuesta...';
+                    input.className = 'w-full py-2 px-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
+                    const submitButton = document.createElement('button');
+                    submitButton.textContent = 'Enviar';
+                    submitButton.className = 'mt-2 w-full py-2 px-4 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition duration-300';
+                    submitButton.onclick = () => checkAnswer(input.value);
+                    answerContainer.appendChild(input);
+                    answerContainer.appendChild(submitButton);
+                }
+                
+                questionElement.appendChild(answerContainer);
+                quizQuestionsContainer.appendChild(questionElement);
+                updateProgress();
+            } else {
+                endQuiz();
+            }
+        }
+
+        function checkAnswer(userAnswer) {
+            const question = quizQuestions[currentQuestionIndex];
+            const isCorrect = (typeof question.answer === 'string') ? userAnswer.toLowerCase().trim() === question.answer.toLowerCase().trim() : userAnswer === question.answer;
+
+            if (isCorrect) {
+                score++;
+                feedbackMessageElement.textContent = '¡Correcto! ✅';
+                feedbackMessageElement.className = 'mt-4 text-center text-lg font-bold text-green-600';
+            } else {
+                feedbackMessageElement.textContent = `Incorrecto. La respuesta correcta es: ${question.answer}. ❌`;
+                feedbackMessageElement.className = 'mt-4 text-center text-lg font-bold text-red-600';
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                renderQuestion();
+            }, 1000);
+        }
+
+        function updateProgress() {
+            progressText.textContent = `${currentQuestionIndex}/${quizQuestions.length}`;
+            const percentage = (currentQuestionIndex / quizQuestions.length) * 100;
+            progressBar.style.width = `${percentage}%`;
+        }
+
+        function endQuiz() {
+            clearInterval(timerId);
+            const quizView = document.getElementById('quiz-template');
+            const quizQuestionsContainer = quizView.querySelector('#quiz-questions');
+            const progressContainer = quizView.querySelector('#progress-container');
+            const timerContainer = quizView.querySelector('#timer-container');
+            const feedbackMessage = quizView.querySelector('#feedback-message');
+            const quizResults = quizView.querySelector('#quiz-results');
+            const scoreText = quizView.querySelector('#score-text');
+            if (quizQuestionsContainer) quizQuestionsContainer.classList.add('hidden');
+            if (progressContainer) progressContainer.classList.add('hidden');
+            if (timerContainer) timerContainer.classList.add('hidden');
+            if (feedbackMessage) feedbackMessage.classList.add('hidden');
+            if (quizResults) quizResults.classList.remove('hidden');
+
+            const percentage = (score / quizQuestions.length) * 100;
+            if (scoreText) scoreText.innerHTML = `Tu puntuación es: <span class="font-bold text-blue-600">${score} / ${quizQuestions.length}</span> (${percentage.toFixed(0)}%)`;
+            
+            if (!userProgress[currentModule]) {
+                userProgress[currentModule] = {};
+            }
+            userProgress[currentModule][currentLesson] = { score: score, total: quizQuestions.length, passed: percentage >= 70 };
+            saveProgress();
+        }
+
+        function showBlockedMessage() {
+            blockedModal.classList.remove('hidden');
+        }
+
+        function hideBlockedMessage() {
+            blockedModal.classList.add('hidden');
+        }
+
+        function showAdminModal() {
+            adminModal.classList.remove('hidden');
+        }
+
+        function hideAdminModal() {
+            adminModal.classList.add('hidden');
+        }
+
+        function unlockModules() {
+            const password = adminPasswordInput.value;
+            database.ref('passwords/adminPassword').once('value')
+                .then(snapshot => {
+                    const storedPassword = snapshot.val();
+                    if (password === storedPassword) {
+                        isAllModulesUnlocked = true;
+                        saveProgress();
+                        
+                        // Lógica para enviar la notificación al administrador
+                        const notificationData = {
+                            timestamp: new Date().toISOString(),
+                            message: '¡Acceso de administrador concedido!'
+                        };
+                        database.ref('adminNotifications/unlocks').push(notificationData);
+
+                        adminMessage.textContent = 'Acceso concedido. Módulos desbloqueados.';
+                        adminMessage.className = 'text-green-500 text-sm mt-2';
+                        adminMessage.classList.remove('hidden');
+                        setTimeout(() => {
+                            hideAdminModal();
+                            showMainMenu();
+                        }, 1500);
+                    } else {
+                        adminMessage.textContent = 'Contraseña incorrecta.';
+                        adminMessage.className = 'text-red-500 text-sm mt-2';
+                        adminMessage.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    adminMessage.textContent = 'Error de conexión. Inténtalo de nuevo.';
+                    adminMessage.className = 'text-red-500 text-sm mt-2';
+                    adminMessage.classList.remove('hidden');
+                });
+        }
+        
+        function showPerformanceAnalysis() {
+            hideAllViews();
+            performanceAnalysisTemplate.classList.remove('hidden');
+            performanceDetails.innerHTML = ''; // Limpiar el contenido anterior
+            let totalCorrect = 0;
+            let totalQuestions = 0;
+            let totalPassedLessons = 0;
+            let totalQuizzes = 0;
+
+            const resultsList = document.createElement('ul');
+            resultsList.className = 'space-y-4 text-left mx-auto max-w-lg';
+
+            for (const moduleId in userProgress) {
+                if (userProgress.hasOwnProperty(moduleId)) {
+                    const moduleTitle = modules[moduleId].title;
+                    const lessons = userProgress[moduleId];
+                    
+                    const moduleItem = document.createElement('li');
+                    moduleItem.className = 'bg-gray-100 p-4 rounded-lg shadow-sm';
+                    moduleItem.innerHTML = `<h3 class="text-lg font-bold text-gray-800">${moduleTitle}</h3><ul class="mt-2 space-y-2"></ul>`;
+                    const lessonListElement = moduleItem.querySelector('ul');
+                    
+                    for (const lessonId in lessons) {
+                        if (lessons.hasOwnProperty(lessonId)) {
+                            const result = lessons[lessonId];
+                            const lessonTitle = modules[moduleId].lessons[lessonId].title;
+                            const percentage = (result.score / result.total) * 100;
+
+                            totalCorrect += result.score;
+                            totalQuestions += result.total;
+                            totalQuizzes++;
+                            if (result.passed) {
+                                totalPassedLessons++;
+                            }
+
+                            const resultItem = document.createElement('li');
+                            const statusIcon = result.passed ? '✅' : '❌';
+                            const statusColor = result.passed ? 'text-green-600' : 'text-red-600';
+                            resultItem.innerHTML = `<span class="text-base">${statusIcon} **${lessonTitle}**:</span> ${percentage.toFixed(0)}% de aciertos <span class="text-sm text-gray-500">(${result.score} de ${result.total})</span>`;
+                            lessonListElement.appendChild(resultItem);
+                        }
+                    }
+                    resultsList.appendChild(moduleItem);
+                }
+            }
+
+            if (totalQuizzes > 0) {
+                const overallPercentage = (totalCorrect / totalQuestions) * 100;
+                const summaryDiv = document.createElement('div');
+                summaryDiv.className = 'mb-6 p-4 bg-blue-100 text-blue-800 rounded-lg font-semibold';
+                summaryDiv.innerHTML = `
+                    <p>Cuestionarios completados: ${totalQuizzes}</p>
+                    <p>Lecciones aprobadas (+70%): ${totalPassedLessons}</p>
+                    <p>Rendimiento general: ${overallPercentage.toFixed(0)}% de aciertos</p>
+                `;
+                performanceDetails.appendChild(summaryDiv);
+                performanceDetails.appendChild(resultsList);
+            } else {
+                performanceDetails.innerHTML = `<p class="text-gray-500">No has completado ningún cuestionario aún. ¡Empieza para ver tus resultados aquí!</p>`;
+            }
+        }
+        
+        function resetQuizzes() {
+            if (confirm('¿Estás seguro de que quieres reiniciar todos tus cuestionarios? Esto borrará tu progreso.')) {
+                userProgress = {};
+                saveProgress();
+                alert('Tu progreso ha sido reiniciado.');
+                showPerformanceAnalysis(); // Vuelve a renderizar la página de análisis sin progreso
+            }
+        }
+
+        // Memory Game logic
+        const cardContainer = document.getElementById('card-container');
+        let words = [];
+        let firstCard = null;
+        let secondCard = null;
+        let lockBoard = false;
+        
+        function showMatchingGame() {
+            hideAllViews();
+            matchingGameTemplate.classList.remove('hidden');
+            createCards();
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function createCards() {
+            words = ['Hello', 'Goodbye', 'Apple', 'House', 'Book', 'Car'];
+            const gameWords = [...words, ...words];
+            shuffle(gameWords);
+            cardContainer.innerHTML = '';
+            gameWords.forEach(word => {
+                const card = document.createElement('div');
+                card.className = 'card-game relative w-full flex items-center justify-center overflow-hidden';
+                card.dataset.word = word;
+                
+                card.innerHTML = `
+                    <div class="card-inner w-full h-full transform-gpu">
+                        <div class="card-front w-full h-full bg-white text-gray-800 rounded-lg shadow-lg flex items-center justify-center p-4">
+                            <span class="text-xs sm:text-base md:text-xl font-bold">${word}</span>
+                        </div>
+                        <div class="card-back w-full h-full bg-blue-500 text-white rounded-lg shadow-lg flex items-center justify-center text-2xl md:text-4xl">
+                            ?
+                        </div>
+                    </div>
+                `;
+                card.addEventListener('click', flipCard);
+                cardContainer.appendChild(card);
+            });
+        }
+        
+        function flipCard() {
+            if (lockBoard) return;
+            if (this === firstCard) return;
+
+            this.classList.add('flipped');
+            if (!firstCard) {
+                firstCard = this;
+                return;
+            }
+            secondCard = this;
+            checkForMatch();
+        }
+
+        function checkForMatch() {
+            const isMatch = firstCard.dataset.word === secondCard.dataset.word;
+            isMatch ? disableCards() : unflipCards();
+        }
+
+        function disableCards() {
+            firstCard.removeEventListener('click', flipCard);
+            secondCard.removeEventListener('click', flipCard);
+            setTimeout(() => {
+                firstCard.classList.add('opacity-50', 'cursor-not-allowed');
+                secondCard.classList.add('opacity-50', 'cursor-not-allowed');
+                resetBoard();
+            }, 500);
+        }
+
+        function unflipCards() {
+            lockBoard = true;
+            setTimeout(() => {
+                firstCard.classList.remove('flipped');
+                secondCard.classList.remove('flipped');
+                resetBoard();
+            }, 1000);
+        }
+
+        function resetBoard() {
+            [firstCard, secondCard] = [null, null];
+            lockBoard = false;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProgress();
+            showMainMenu();
+            unlockButton.addEventListener('click', unlockModules);
+            adminPasswordInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    unlockModules();
+                }
+            });
+            adminButton.addEventListener('click', showAdminModal);
+            shareButton.addEventListener('click', shareCourse);
         });
+        
+        const passwordInput = document.getElementById('admin-password-input');
+        const togglePassword = document.getElementById('toggle-password-visibility');
+
+        if (togglePassword) {
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+
+                // Cambiar el ícono
+                const icon = this.querySelector('i');
+                if (icon.classList.contains('fa-eye')) {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        }
     </script>
 </body>
 </html>
